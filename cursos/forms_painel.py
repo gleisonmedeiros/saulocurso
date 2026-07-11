@@ -15,6 +15,15 @@ def extrair_drive_id(valor):
     return match.group(1) if match else valor
 
 
+def extrair_youtube_id(valor):
+    """Aceita ID puro ou link do YouTube (watch/youtu.be/embed/shorts) e devolve só o ID."""
+    valor = valor.strip()
+    match = re.search(
+        r"(?:youtu\.be/|youtube\.com/(?:watch\?v=|embed/|shorts/|live/))([a-zA-Z0-9_-]{11})", valor
+    )
+    return match.group(1) if match else valor
+
+
 def _aplicar_classes(form):
     for field in form.fields.values():
         if isinstance(field.widget, forms.CheckboxInput):
@@ -36,11 +45,16 @@ class CursoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["drive_capa_file_id"].help_text = "Cola o ID ou o link de compartilhamento inteiro — o ID é extraído sozinho."
+        self.fields["video_youtube_id"].help_text = "Cola o ID ou o link do vídeo inteiro — o ID é extraído sozinho."
         _aplicar_classes(self)
 
     def clean_drive_capa_file_id(self):
         valor = self.cleaned_data.get("drive_capa_file_id", "")
         return extrair_drive_id(valor) if valor else valor
+
+    def clean_video_youtube_id(self):
+        valor = self.cleaned_data.get("video_youtube_id", "")
+        return extrair_youtube_id(valor) if valor else valor
 
 
 class ModuloForm(forms.ModelForm):
@@ -60,9 +74,14 @@ class AulaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["youtube_id"].help_text = "Cola o ID ou o link do vídeo inteiro — o ID é extraído sozinho."
         self.fields["drive_file_id"].help_text = "Cola o ID ou o link de compartilhamento inteiro — o ID é extraído sozinho."
         self.fields["drive_pdf_file_id"].help_text = "Cola o ID ou o link de compartilhamento inteiro — o ID é extraído sozinho."
         _aplicar_classes(self)
+
+    def clean_youtube_id(self):
+        valor = self.cleaned_data.get("youtube_id", "")
+        return extrair_youtube_id(valor) if valor else valor
 
     def clean_drive_file_id(self):
         valor = self.cleaned_data.get("drive_file_id", "")
@@ -88,8 +107,13 @@ class ConfiguracaoSiteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["hero_video_youtube_id"].help_text = "Cola o ID ou o link do vídeo inteiro — o ID é extraído sozinho."
         self.fields["hero_video_drive_file_id"].help_text = "Cola o ID ou o link de compartilhamento inteiro — o ID é extraído sozinho."
         _aplicar_classes(self)
+
+    def clean_hero_video_youtube_id(self):
+        valor = self.cleaned_data.get("hero_video_youtube_id", "")
+        return extrair_youtube_id(valor) if valor else valor
 
     def clean_hero_video_drive_file_id(self):
         valor = self.cleaned_data.get("hero_video_drive_file_id", "")
