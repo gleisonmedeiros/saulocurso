@@ -7,5 +7,6 @@ db.sqlite3
 !vercel.json
 media/
 staticfiles/
+_staticfiles_build/
 *.log
 .DS_Store
