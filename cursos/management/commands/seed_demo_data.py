@@ -27,7 +27,7 @@ CURSOS_DEMO = [
         "descricao": "Curso completo de Python cobrindo lógica de programação, orientação a objetos, "
         "manipulação de arquivos e projetos práticos. Inclui mentoria ao vivo com o instrutor.",
         "preco": "297.00",
-        "imagem_tags": "stethoscope",
+        "imagem_tags": "programming",
         "modulos": [
             ("Fundamentos de Python", ["Instalando o ambiente", "Variáveis e tipos de dados", "Estruturas de decisão"]),
             ("Orientação a Objetos", ["Classes e objetos", "Herança e polimorfismo"]),
@@ -39,7 +39,7 @@ CURSOS_DEMO = [
         "descricao": "Domine as ferramentas de marketing digital mais usadas no mercado: redes sociais, "
         "anúncios pagos, email marketing e funis de vendas.",
         "preco": "247.00",
-        "imagem_tags": "medicalequipment",
+        "imagem_tags": "digitalmarketing",
         "modulos": [
             ("Fundamentos de Marketing", ["Definindo seu público", "Construindo sua marca"]),
             ("Tráfego Pago", ["Introdução a anúncios", "Otimizando campanhas"]),
@@ -51,7 +51,7 @@ CURSOS_DEMO = [
         "descricao": "Aprenda fórmulas avançadas, tabelas dinâmicas, dashboards visuais e automação com "
         "macros pra ganhar produtividade na gestão do seu negócio.",
         "preco": "197.00",
-        "imagem_tags": "clinic",
+        "imagem_tags": "spreadsheet",
         "modulos": [
             ("Fórmulas Avançadas", ["PROCV e ÍNDICE/CORRESP", "Fórmulas condicionais"]),
             ("Dashboards", ["Tabelas dinâmicas", "Gráficos e indicadores"]),
