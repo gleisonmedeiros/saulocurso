@@ -29,7 +29,7 @@ class CursoForm(forms.ModelForm):
         model = Curso
         fields = [
             "titulo", "slug", "descricao_curta", "descricao", "preco",
-            "imagem_capa", "drive_capa_file_id", "video_youtube_id", "ativo",
+            "drive_capa_file_id", "capa_url_externa", "video_youtube_id", "ativo",
         ]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 6})}
 
@@ -56,7 +56,7 @@ class ModuloForm(forms.ModelForm):
 class AulaForm(forms.ModelForm):
     class Meta:
         model = Aula
-        fields = ["titulo", "youtube_id", "drive_file_id", "arquivo_pdf", "drive_pdf_file_id", "ordem"]
+        fields = ["titulo", "youtube_id", "drive_file_id", "drive_pdf_file_id", "ordem"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

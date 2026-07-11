@@ -3,7 +3,7 @@ import io
 import qrcode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -137,16 +137,7 @@ def aula_video_token(request, aula_id, aula):
 
 
 @matricula_required_aula
-def aula_pdf(request, aula_id, aula):
-    if not aula.arquivo_pdf:
-        raise Http404("esta aula não tem apostila em PDF")
-    return FileResponse(aula.arquivo_pdf.open("rb"), content_type="application/pdf")
-
-
-@matricula_required_aula
 def aula_pdf_token(request, aula_id, aula):
     if aula.drive_pdf_file_id:
         return JsonResponse({"fonte": "drive", "file_id": aula.drive_pdf_file_id})
-    if aula.arquivo_pdf:
-        return JsonResponse({"fonte": "local"})
     return JsonResponse({"error": "esta aula não tem apostila"}, status=404)

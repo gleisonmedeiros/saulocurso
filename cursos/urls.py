@@ -16,7 +16,6 @@ urlpatterns = [
     path("certificados/<uuid:codigo>/qrcode/", views.certificado_qrcode, name="certificado_qrcode"),
     path("aulas/<int:aula_id>/", views.assistir_aula, name="assistir_aula"),
     path("aulas/<int:aula_id>/video-token/", views.aula_video_token, name="aula_video_token"),
-    path("aulas/<int:aula_id>/pdf/", views.aula_pdf, name="aula_pdf"),
     path("aulas/<int:aula_id>/pdf-token/", views.aula_pdf_token, name="aula_pdf_token"),
     path("aulas/<int:aula_id>/concluir/", views.concluir_aula, name="concluir_aula"),
 ]

@@ -6,7 +6,7 @@ from .models import Aula, ContatoMensagem, Curso, MentoriaAoVivo, Modulo
 class AulaInline(admin.TabularInline):
     model = Aula
     extra = 1
-    fields = ("titulo", "youtube_id", "drive_file_id", "arquivo_pdf", "ordem")
+    fields = ("titulo", "youtube_id", "drive_file_id", "drive_pdf_file_id", "ordem")
 
 
 class ModuloInline(admin.StackedInline):
@@ -34,7 +34,7 @@ class ModuloAdmin(admin.ModelAdmin):
 
 @admin.register(Aula)
 class AulaAdmin(admin.ModelAdmin):
-    list_display = ("titulo", "modulo", "youtube_id", "drive_file_id", "arquivo_pdf", "ordem")
+    list_display = ("titulo", "modulo", "youtube_id", "drive_file_id", "drive_pdf_file_id", "ordem")
     list_filter = ("modulo__curso",)
 
 

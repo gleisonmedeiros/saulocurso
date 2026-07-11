@@ -57,9 +57,9 @@
                                 </span>
                                 <span class="text-xs text-gray-400">
                                     {% if aula.youtube_id or aula.drive_file_id %}
-                                        vídeo{% if aula.arquivo_pdf or aula.drive_pdf_file_id %} + {% endif %}
+                                        vídeo{% if aula.drive_pdf_file_id %} + {% endif %}
                                     {% endif %}
-                                    {% if aula.arquivo_pdf or aula.drive_pdf_file_id %}pdf{% endif %}
+                                    {% if aula.drive_pdf_file_id %}pdf{% endif %}
                                 </span>
                             </a>
                         </li>

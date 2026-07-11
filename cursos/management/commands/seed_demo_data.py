@@ -1,8 +1,6 @@
-import urllib.request
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -11,14 +9,6 @@ from cursos.models import Aula, Curso, MentoriaAoVivo, Modulo
 from matriculas.models import Matricula
 
 DEMO_YOUTUBE_ID = "S9uPNppGsGo"
-
-DEMO_PDF_BYTES = (
-    b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-    b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
-    b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n"
-    b"xref\n0 4\n0000000000 65535 f \n"
-    b"trailer<</Size 4/Root 1 0 R>>\nstartxref\n0\n%%EOF"
-)
 
 CURSOS_DEMO = [
     {
@@ -89,11 +79,6 @@ class Command(BaseCommand):
             )
             cursos_criados.append(curso)
 
-            if not curso.imagem_capa:
-                imagem = self._baixar_foto_capa(slug, dados["imagem_tags"])
-                if imagem:
-                    curso.imagem_capa.save(f"{slug}.jpg", imagem, save=True)
-
             for m_ordem, (modulo_titulo, aulas) in enumerate(dados["modulos"]):
                 modulo, _ = Modulo.objects.get_or_create(
                     curso=curso, titulo=modulo_titulo, defaults={"ordem": m_ordem}
@@ -103,12 +88,7 @@ class Command(BaseCommand):
                         modulo=modulo, titulo=aula_titulo, defaults={"ordem": a_ordem}
                     )
                     if criada:
-                        if a_ordem % 2 == 0:
-                            aula.youtube_id = DEMO_YOUTUBE_ID
-                        else:
-                            aula.arquivo_pdf.save(
-                                f"apostila-{aula.id}.pdf", ContentFile(DEMO_PDF_BYTES), save=False
-                            )
+                        aula.youtube_id = DEMO_YOUTUBE_ID
                         aula.save()
 
             MentoriaAoVivo.objects.get_or_create(
@@ -132,12 +112,3 @@ class Command(BaseCommand):
         from django.utils.text import slugify
 
         return slugify(titulo)
-
-    def _baixar_foto_capa(self, seed, tags):
-        url = f"https://loremflickr.com/800/450/{tags}"
-        try:
-            with urllib.request.urlopen(url, timeout=15) as resp:
-                return ContentFile(resp.read())
-        except Exception as exc:
-            self.stdout.write(self.style.WARNING(f"Não deu pra baixar foto de capa ({seed}): {exc}"))
-            return None

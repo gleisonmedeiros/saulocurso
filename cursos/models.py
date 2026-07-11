@@ -8,15 +8,18 @@ class Curso(models.Model):
     descricao_curta = models.CharField("descrição curta (propaganda)", max_length=300)
     descricao = models.TextField("descrição completa")
     preco = models.DecimalField(max_digits=8, decimal_places=2)
-    imagem_capa = models.ImageField("capa (upload local)", upload_to="cursos/capas/", blank=True, null=True)
     drive_capa_file_id = models.CharField(
         "ID da capa no Google Drive",
         max_length=100,
         blank=True,
-        help_text="Alternativa ao upload local — preenchendo este campo, a capa é servida direto do "
-        "Google Drive (útil em hospedagem sem disco persistente, tipo Vercel; tem prioridade sobre o "
-        "upload). Pega o ID em drive.google.com/file/d/ESSE-TRECHO-AQUI/view — a imagem precisa estar "
+        help_text="Pega o ID em drive.google.com/file/d/ESSE-TRECHO-AQUI/view — a imagem precisa estar "
         "compartilhada como \"qualquer pessoa com o link\".",
+    )
+    capa_url_externa = models.URLField(
+        "URL da capa (link direto)",
+        blank=True,
+        help_text="Alternativa ao Drive — cola o link direto da imagem (ex: termina em .jpg/.png). "
+        "Se preencher os dois, o Drive tem prioridade.",
     )
     video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=20, blank=True)
     ativo = models.BooleanField(default=True)
@@ -35,8 +38,8 @@ class Curso(models.Model):
     def capa_url(self):
         if self.drive_capa_file_id:
             return f"https://drive.google.com/thumbnail?id={self.drive_capa_file_id}&sz=w1000"
-        if self.imagem_capa:
-            return self.imagem_capa.url
+        if self.capa_url_externa:
+            return self.capa_url_externa
         return ""
 
 
@@ -65,13 +68,11 @@ class Aula(models.Model):
         "drive.google.com/file/d/ESSE-TRECHO-AQUI/view — e desative a opção de download "
         "pra quem visualiza, nas configurações de compartilhamento do arquivo.",
     )
-    arquivo_pdf = models.FileField("apostila em PDF (upload local)", upload_to="cursos/apostilas/", blank=True, null=True)
     drive_pdf_file_id = models.CharField(
         "ID da apostila no Google Drive",
         max_length=100,
         blank=True,
-        help_text="Alternativa ao upload local — preenchendo este campo, a apostila é servida "
-        "direto do Google Drive (útil em hospedagem sem disco persistente, tipo Vercel). "
+        help_text="A apostila é servida direto do Google Drive. "
         "Mesmo esquema do vídeo: pega o ID em drive.google.com/file/d/ESSE-TRECHO-AQUI/view "
         "e desativa a opção de download pra quem visualiza.",
     )

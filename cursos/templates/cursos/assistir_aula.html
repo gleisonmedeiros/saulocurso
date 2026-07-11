@@ -15,7 +15,7 @@
         </div>
     {% endif %}
 
-    {% if aula.arquivo_pdf or aula.drive_pdf_file_id %}
+    {% if aula.drive_pdf_file_id %}
         <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6">
             <div class="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-600">Apostila</div>
             <div id="pdf-outer" style="height: 90vh; position: relative;">
@@ -129,7 +129,7 @@
         });
     {% endif %}
 
-    {% if aula.arquivo_pdf or aula.drive_pdf_file_id %}
+    {% if aula.drive_pdf_file_id %}
     fetch("{% url 'cursos:aula_pdf_token' aula.id %}")
         .then(r => {
             if (!r.ok) throw new Error('sem acesso');
@@ -141,12 +141,10 @@
             const iframe = document.createElement('iframe');
             iframe.className = 'w-full h-full';
             iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-            iframe.src = data.fonte === 'drive'
-                ? `https://drive.google.com/file/d/${data.file_id}/preview`
-                : "{% url 'cursos:aula_pdf' aula.id %}";
+            iframe.src = `https://drive.google.com/file/d/${data.file_id}/preview`;
             wrap.replaceWith(iframe);
 
-            if (data.fonte === 'drive') {
+            {
                 // Cobre o ícone "abrir em outra janela" do canto superior direito do Drive.
                 const bloqueioDrivePdf = document.createElement('div');
                 bloqueioDrivePdf.style.cssText = 'position:absolute;top:0;right:0;width:56px;height:56px;z-index:5;';
