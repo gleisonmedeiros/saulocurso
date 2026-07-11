@@ -36,8 +36,8 @@
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for curso in cursos %}
                 <a href="{{ curso.get_absolute_url }}" class="group block bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                    {% if curso.imagem_capa %}
-                        <img src="{{ curso.imagem_capa.url }}" alt="{{ curso.titulo }}" class="w-full h-56 object-cover">
+                    {% if curso.capa_url %}
+                        <img src="{{ curso.capa_url }}" alt="{{ curso.titulo }}" class="w-full h-56 object-cover">
                     {% else %}
                         <div class="w-full h-56 bg-gradient-to-br from-brand-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl px-6 text-center">{{ curso.titulo }}</div>
                     {% endif %}

@@ -13,8 +13,8 @@
     {% endif %}
 
     <div class="grid md:grid-cols-2 gap-8 items-center mb-8">
-        {% if curso.imagem_capa %}
-            <img src="{{ curso.imagem_capa.url }}" alt="{{ curso.titulo }}" class="w-full h-72 object-cover rounded-xl">
+        {% if curso.capa_url %}
+            <img src="{{ curso.capa_url }}" alt="{{ curso.titulo }}" class="w-full h-72 object-cover rounded-xl">
         {% else %}
             <div class="w-full h-72 bg-gradient-to-br from-brand-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-2xl px-6 text-center">{{ curso.titulo }}</div>
         {% endif %}

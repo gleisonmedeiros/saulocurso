@@ -27,12 +27,20 @@ def _aplicar_classes(form):
 class CursoForm(forms.ModelForm):
     class Meta:
         model = Curso
-        fields = ["titulo", "slug", "descricao_curta", "descricao", "preco", "imagem_capa", "video_youtube_id", "ativo"]
+        fields = [
+            "titulo", "slug", "descricao_curta", "descricao", "preco",
+            "imagem_capa", "drive_capa_file_id", "video_youtube_id", "ativo",
+        ]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 6})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["drive_capa_file_id"].help_text = "Cola o ID ou o link de compartilhamento inteiro — o ID é extraído sozinho."
         _aplicar_classes(self)
+
+    def clean_drive_capa_file_id(self):
+        valor = self.cleaned_data.get("drive_capa_file_id", "")
+        return extrair_drive_id(valor) if valor else valor
 
 
 class ModuloForm(forms.ModelForm):

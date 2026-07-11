@@ -9,8 +9,8 @@
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for matricula in matriculas %}
                 <a href="{% url 'cursos:conteudo' matricula.curso.slug %}" class="block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
-                    {% if matricula.curso.imagem_capa %}
-                        <img src="{{ matricula.curso.imagem_capa.url }}" alt="{{ matricula.curso.titulo }}" class="w-full h-32 object-cover">
+                    {% if matricula.curso.capa_url %}
+                        <img src="{{ matricula.curso.capa_url }}" alt="{{ matricula.curso.titulo }}" class="w-full h-32 object-cover">
                     {% else %}
                         <div class="w-full h-32 bg-brand-100 flex items-center justify-center text-brand-600 font-bold">{{ matricula.curso.titulo }}</div>
                     {% endif %}
