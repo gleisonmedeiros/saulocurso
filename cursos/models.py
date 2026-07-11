@@ -21,7 +21,7 @@ class Curso(models.Model):
         help_text="Alternativa ao Drive — cola o link direto da imagem (ex: termina em .jpg/.png). "
         "Se preencher os dois, o Drive tem prioridade.",
     )
-    video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=20, blank=True)
+    video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -58,7 +58,7 @@ class Modulo(models.Model):
 class Aula(models.Model):
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name="aulas")
     titulo = models.CharField(max_length=200)
-    youtube_id = models.CharField("ID do vídeo no YouTube", max_length=20, blank=True)
+    youtube_id = models.CharField("ID do vídeo no YouTube", max_length=200, blank=True)
     drive_file_id = models.CharField(
         "ID do arquivo no Google Drive",
         max_length=100,
@@ -111,7 +111,7 @@ class ConfiguracaoSite(models.Model):
         default="Aulas em vídeo, apostilas em PDF e mentoria ao vivo. Acesso liberado na hora, "
         "direto no navegador — no computador ou no celular."
     )
-    hero_video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=20, blank=True, default="S9uPNppGsGo")
+    hero_video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=200, blank=True, default="S9uPNppGsGo")
     hero_video_drive_file_id = models.CharField(
         "ID do vídeo de apresentação (Google Drive)",
         max_length=100,

@@ -20,6 +20,9 @@
             <div class="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-600">Apostila</div>
             <div id="pdf-outer" style="height: 90vh; position: relative;">
                 <div id="pdf-wrap" class="w-full h-full flex items-center justify-center text-gray-400 text-sm">Carregando apostila...</div>
+                <button type="button" id="pdf-fullscreen-btn" title="Tela cheia" class="absolute bottom-3 left-3 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                </button>
             </div>
         </div>
     {% endif %}
@@ -130,6 +133,20 @@
     {% endif %}
 
     {% if aula.drive_pdf_file_id %}
+    document.getElementById('pdf-fullscreen-btn').addEventListener('click', () => {
+        const el = document.getElementById('pdf-outer');
+        const emTelaCheia = document.fullscreenElement || document.webkitFullscreenElement;
+
+        const sair = document.exitFullscreen || document.webkitExitFullscreen;
+        const entrar = el.requestFullscreen || el.webkitRequestFullscreen;
+
+        const promessa = emTelaCheia ? sair.call(document) : entrar.call(el);
+
+        if (promessa && promessa.catch) {
+            promessa.catch(err => alert('Não foi possível abrir em tela cheia: ' + err.message));
+        }
+    });
+
     fetch("{% url 'cursos:aula_pdf_token' aula.id %}")
         .then(r => {
             if (!r.ok) throw new Error('sem acesso');
