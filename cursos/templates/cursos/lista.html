@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Todos os cursos — Saulo Curso{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-16">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6">Todos os cursos disponíveis</h1>
+
+    {% if cursos %}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for curso in cursos %}
+                <a href="{{ curso.get_absolute_url }}" class="group block bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                    {% if curso.imagem_capa %}
+                        <img src="{{ curso.imagem_capa.url }}" alt="{{ curso.titulo }}" class="w-full h-56 object-cover">
+                    {% else %}
+                        <div class="w-full h-56 bg-gradient-to-br from-brand-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl px-6 text-center">{{ curso.titulo }}</div>
+                    {% endif %}
+                    <div class="p-6">
+                        <h3 class="font-semibold text-xl mb-2 group-hover:text-brand-600">{{ curso.titulo }}</h3>
+                        <p class="text-gray-600 mb-5">{{ curso.descricao_curta }}</p>
+                        <div class="flex items-center justify-between border-t border-gray-100 pt-4">
+                            <p class="text-brand-700 font-bold text-lg">R$ {{ curso.preco }}</p>
+                            <span class="text-sm font-semibold text-brand-600 group-hover:underline">Ver curso &rarr;</span>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-500">Nenhum curso disponível no momento.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ aula.titulo }} — {{ curso.titulo }}{% endblock %}
+
+{% block content %}
+<section class="max-w-4xl mx-auto px-4 py-8">
+    <a href="{% url 'cursos:conteudo' curso.slug %}" class="text-sm text-brand-600 hover:underline">&larr; Voltar pro conteúdo</a>
+    <h1 class="text-2xl font-bold mt-2 mb-6">{{ aula.titulo }}</h1>
+
+    {% if aula.youtube_id or aula.drive_file_id %}
+        <div id="player-wrap" class="relative aspect-video bg-black rounded-xl overflow-hidden mb-6">
+            <div id="player" class="w-full h-full flex items-center justify-center text-gray-400 text-sm">Carregando vídeo...</div>
+            <button type="button" id="fullscreen-btn" title="Tela cheia" class="absolute bottom-3 left-3 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+            </button>
+        </div>
+    {% endif %}
+
+    {% if aula.arquivo_pdf or aula.drive_pdf_file_id %}
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6">
+            <div class="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-600">Apostila</div>
+            <div id="pdf-outer" style="height: 90vh; position: relative;">
+                <div id="pdf-wrap" class="w-full h-full flex items-center justify-center text-gray-400 text-sm">Carregando apostila...</div>
+            </div>
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'cursos:concluir_aula' aula.id %}">
+        {% csrf_token %}
+        {% if concluida %}
+            <button type="button" disabled class="w-full bg-green-50 text-green-700 border border-green-200 py-2.5 rounded-lg font-semibold cursor-default">
+                ✓ Aula concluída
+            </button>
+        {% else %}
+            <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">
+                Marcar aula como concluída
+            </button>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    {% if aula.youtube_id or aula.drive_file_id %}
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+        const el = document.getElementById('player-wrap');
+        const emTelaCheia = document.fullscreenElement || document.webkitFullscreenElement;
+
+        const sair = document.exitFullscreen || document.webkitExitFullscreen;
+        const entrar = el.requestFullscreen || el.webkitRequestFullscreen;
+
+        const promessa = emTelaCheia ? sair.call(document) : entrar.call(el);
+
+        if (promessa && promessa.catch) {
+            promessa.catch(err => alert('Não foi possível abrir em tela cheia: ' + err.message));
+        }
+    });
+    {% endif %}
+
+    {% if aula.youtube_id or aula.drive_file_id %}
+    fetch("{% url 'cursos:aula_video_token' aula.id %}")
+        .then(r => {
+            if (!r.ok) throw new Error('sem acesso');
+            return r.json();
+        })
+        .then(data => {
+            const inner = document.getElementById('player');
+            const outer = document.getElementById('player-wrap');
+
+            if (data.fonte === 'drive') {
+                // Player do Google Drive: sem marca/link do YouTube, sem badge de "assistir no app".
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://drive.google.com/file/d/${data.video_id}/preview`;
+                iframe.className = 'w-full h-full';
+                iframe.allow = 'autoplay';
+                iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+                inner.replaceWith(iframe);
+
+                // Cobre o ícone "abrir em outra janela" do canto superior direito do Drive.
+                const bloqueioDrive = document.createElement('div');
+                bloqueioDrive.style.cssText = 'position:absolute;top:0;right:0;width:56px;height:56px;z-index:5;';
+                outer.appendChild(bloqueioDrive);
+                return;
+            }
+
+            const iframe = document.createElement('iframe');
+            iframe.id = 'yt-player-iframe';
+            const origin = encodeURIComponent(window.location.origin);
+            iframe.src = `https://www.youtube.com/embed/${data.video_id}?rel=0&modestbranding=1&controls=1&fs=0&disablekb=1&iv_load_policy=3&enablejsapi=1&origin=${origin}`;
+            iframe.className = 'w-full h-full';
+            iframe.allow = 'autoplay; encrypted-media';
+            iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+            inner.replaceWith(iframe);
+
+            // Bloqueia cliques no título/badge "Assista no YouTube" que aparecem parado/pausado.
+            // Some enquanto o vídeo estiver tocando de verdade, pra não cobrir os controles reais.
+            const bloqueioTopo = document.createElement('div');
+            bloqueioTopo.style.cssText = 'position:absolute;top:0;left:0;right:0;height:24%;z-index:5;';
+            outer.appendChild(bloqueioTopo);
+
+            const bloqueioCanto = document.createElement('div');
+            bloqueioCanto.style.cssText = 'position:absolute;bottom:0;right:0;width:45%;height:18%;z-index:5;';
+            outer.appendChild(bloqueioCanto);
+
+            const alternarBloqueio = (visivel) => {
+                bloqueioTopo.style.display = visivel ? 'block' : 'none';
+                bloqueioCanto.style.display = visivel ? 'block' : 'none';
+            };
+
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.body.appendChild(tag);
+
+            window.onYouTubeIframeAPIReady = () => {
+                new YT.Player('yt-player-iframe', {
+                    events: {
+                        onStateChange: (event) => {
+                            // 1 = tocando, 3 = buffering: some com o bloqueio pra liberar os controles reais
+                            alternarBloqueio(event.data !== 1 && event.data !== 3);
+                        },
+                    },
+                });
+            };
+        })
+        .catch(() => {
+            document.getElementById('player').textContent = 'Não foi possível carregar o vídeo.';
+        });
+    {% endif %}
+
+    {% if aula.arquivo_pdf or aula.drive_pdf_file_id %}
+    fetch("{% url 'cursos:aula_pdf_token' aula.id %}")
+        .then(r => {
+            if (!r.ok) throw new Error('sem acesso');
+            return r.json();
+        })
+        .then(data => {
+            const wrap = document.getElementById('pdf-wrap');
+            const pdfOuter = document.getElementById('pdf-outer');
+            const iframe = document.createElement('iframe');
+            iframe.className = 'w-full h-full';
+            iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+            iframe.src = data.fonte === 'drive'
+                ? `https://drive.google.com/file/d/${data.file_id}/preview`
+                : "{% url 'cursos:aula_pdf' aula.id %}";
+            wrap.replaceWith(iframe);
+
+            if (data.fonte === 'drive') {
+                // Cobre o ícone "abrir em outra janela" do canto superior direito do Drive.
+                const bloqueioDrivePdf = document.createElement('div');
+                bloqueioDrivePdf.style.cssText = 'position:absolute;top:0;right:0;width:56px;height:56px;z-index:5;';
+                pdfOuter.appendChild(bloqueioDrivePdf);
+            }
+        })
+        .catch(() => {
+            document.getElementById('pdf-wrap').textContent = 'Não foi possível carregar a apostila.';
+        });
+    {% endif %}
+</script>
+{% endblock %}

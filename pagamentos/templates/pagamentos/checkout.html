@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Pagamento — {{ curso.titulo }}{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16">
+    <h1 class="text-2xl font-bold mb-6 text-center">Finalizar inscrição</h1>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-lg mb-1">{{ curso.titulo }}</h2>
+        <p class="text-gray-500 text-sm mb-4">{{ curso.descricao_curta }}</p>
+        <p class="text-2xl font-bold text-brand-700 mb-6">R$ {{ curso.preco }}</p>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            {% if user.is_authenticated %}
+                <p class="text-sm text-gray-500">Comprando como <strong>{{ user.email|default:user.username }}</strong>.</p>
+            {% else %}
+                <p class="text-sm text-gray-500">
+                    Depois do pagamento aprovado você completa seu cadastro (nome, CPF, telefone e email) e recebe a senha de acesso por email.
+                </p>
+                <p class="text-xs text-gray-400">
+                    Já tem conta? <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="text-brand-600 hover:underline">Faça login</a> antes de continuar.
+                </p>
+            {% endif %}
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Forma de pagamento</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="metodo-opcao cursor-pointer border-2 border-brand-600 bg-brand-50 rounded-lg px-4 py-3 text-center font-semibold text-brand-700">
+                        <input type="radio" name="metodo" value="pix" checked class="sr-only">
+                        Pix
+                    </label>
+                    <label class="metodo-opcao cursor-pointer border-2 border-gray-200 rounded-lg px-4 py-3 text-center font-semibold text-gray-600">
+                        <input type="radio" name="metodo" value="cartao" class="sr-only">
+                        Cartão de crédito
+                    </label>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-400">
+                Pagamento em modo de demonstração — clique em "Pagar" pra simular a aprovação instantânea.
+            </p>
+            <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">
+                Pagar agora
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.metodo-opcao').forEach(label => {
+        label.addEventListener('click', () => {
+            document.querySelectorAll('.metodo-opcao').forEach(l => {
+                l.classList.remove('border-brand-600', 'bg-brand-50', 'text-brand-700');
+                l.classList.add('border-gray-200', 'text-gray-600');
+            });
+            label.classList.remove('border-gray-200', 'text-gray-600');
+            label.classList.add('border-brand-600', 'bg-brand-50', 'text-brand-700');
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        --primary: #4f46e5;
+        --secondary: #4338ca;
+        --accent: #4f46e5;
+        --primary-fg: #fff;
+
+        --header-color: #fff;
+        --header-branding-color: #fff;
+        --header-bg: #4338ca;
+        --header-link-color: #fff;
+
+        --breadcrumbs-fg: #e0e7ff;
+        --breadcrumbs-link-fg: #fff;
+        --breadcrumbs-bg: #4f46e5;
+
+        --link-fg: #4f46e5;
+        --link-hover-color: #4338ca;
+        --link-selected-fg: #4338ca;
+
+        --button-bg: #4f46e5;
+        --button-hover-bg: #4338ca;
+        --default-button-bg: #4f46e5;
+        --default-button-hover-bg: #4338ca;
+
+        --object-tools-bg: #4f46e5;
+        --object-tools-hover-bg: #4338ca;
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">🛡️ {{ site_header }}</a></h1>
+{% endblock %}

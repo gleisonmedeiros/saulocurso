@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Entrar — Saulo Curso{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16">
+    <h1 class="text-2xl font-bold mb-6 text-center">Entrar</h1>
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <p class="text-red-600 text-sm">{{ form.non_field_errors }}</p>
+        {% endif %}
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Entrar</button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-4">
+        Não tem conta? <a href="{% url 'cursos:home' %}#cursos" class="text-brand-600 hover:underline">Escolha um curso</a> — sua conta é criada na hora da compra.
+    </p>
+</section>
+{% endblock %}

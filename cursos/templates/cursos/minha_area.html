@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Minha área — Saulo Curso{% endblock %}
+
+{% block content %}
+<section class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold mb-6">Minha área</h1>
+
+    {% if matriculas %}
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for matricula in matriculas %}
+                <a href="{% url 'cursos:conteudo' matricula.curso.slug %}" class="block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                    {% if matricula.curso.imagem_capa %}
+                        <img src="{{ matricula.curso.imagem_capa.url }}" alt="{{ matricula.curso.titulo }}" class="w-full h-32 object-cover">
+                    {% else %}
+                        <div class="w-full h-32 bg-brand-100 flex items-center justify-center text-brand-600 font-bold">{{ matricula.curso.titulo }}</div>
+                    {% endif %}
+                    <div class="p-4">
+                        <h3 class="font-semibold">{{ matricula.curso.titulo }}</h3>
+                        <p class="text-xs text-gray-500 mt-1 mb-2">Matriculado em {{ matricula.data_matricula|date:"d/m/Y" }}</p>
+                        <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-1">
+                            <div class="h-full bg-brand-600 rounded-full" style="width: {{ matricula.progresso.percentual }}%;"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">
+                            {{ matricula.progresso.concluidas }}/{{ matricula.progresso.total }} aulas
+                            {% if matricula.progresso.completo %} · 🎓 certificado disponível{% endif %}
+                        </p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-500 mb-4">Você ainda não está matriculado em nenhum curso.</p>
+        <a href="{% url 'cursos:home' %}" class="text-brand-600 font-semibold hover:underline">Ver cursos disponíveis →</a>
+    {% endif %}
+</section>
+{% endblock %}

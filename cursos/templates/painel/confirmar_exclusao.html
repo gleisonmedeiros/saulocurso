@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Excluir — Painel{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16">
+    <div class="bg-white border border-red-200 rounded-xl p-6 text-center">
+        <h1 class="text-xl font-bold mb-2">Excluir "{{ objeto }}"?</h1>
+        <p class="text-gray-500 text-sm mb-6">Essa ação não pode ser desfeita.</p>
+        <form method="post" class="flex gap-3 justify-center">
+            {% csrf_token %}
+            <a href="{% url voltar_url voltar_pk %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Cancelar</a>
+            <button type="submit" class="bg-red-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-red-700">Excluir</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

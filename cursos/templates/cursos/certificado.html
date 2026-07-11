@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Certificado — {{ curso.titulo }}{% endblock %}
+
+{% block content %}
+<section class="max-w-3xl mx-auto px-4 py-12">
+    <div class="flex justify-end gap-3 mb-4 print:hidden">
+        <a href="{% url 'cursos:conteudo' curso.slug %}" class="text-sm text-brand-600 hover:underline self-center">&larr; Voltar</a>
+        <button onclick="window.print()" class="bg-brand-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-brand-700">Imprimir / Salvar PDF</button>
+    </div>
+
+    <div class="bg-white border-4 border-brand-600 rounded-2xl p-10 md:p-16 text-center">
+        <p class="text-sm tracking-widest uppercase text-gray-400 mb-6">Certificado de Conclusão</p>
+
+        <p class="text-gray-500 mb-2">Certificamos que</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-brand-700 mb-4">{{ certificado.aluno.get_full_name|default:certificado.aluno.username }}</h1>
+        <p class="text-gray-500 mb-2">concluiu com êxito o curso</p>
+        <h2 class="text-2xl font-semibold mb-8">{{ curso.titulo }}</h2>
+
+        <p class="text-gray-500 mb-10">
+            Curso realizado 100% online, com aulas em vídeo, apostilas e mentoria ao vivo,
+            emitido em {{ certificado.emitido_em|date:"d/m/Y" }}.
+        </p>
+
+        <div class="flex justify-between items-end border-t border-gray-200 pt-6 text-xs text-gray-400">
+            <span>Saulo Curso</span>
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <p>Código de verificação: {{ certificado.codigo }}</p>
+                    <p>Escaneie o QR code ao lado pra validar</p>
+                </div>
+                <img src="{% url 'cursos:certificado_qrcode' certificado.codigo %}" alt="QR code de verificação" class="w-16 h-16">
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
