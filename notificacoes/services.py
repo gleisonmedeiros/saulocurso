@@ -54,7 +54,7 @@ class NotificationService:
         self.backend.enviar_email(settings.ADMIN_NOTIFICATION_EMAIL, assunto, mensagem_admin)
 
     def notificar_credenciais(self, aluno, senha_temporaria):
-        assunto = "Seu acesso à plataforma Saulo Curso"
+        assunto = "Seu acesso à plataforma RS Central dos Cursos"
         mensagem = (
             f"Olá {aluno.get_full_name() or aluno.get_username()}, seu cadastro foi concluído.\n\n"
             f"Login: {aluno.username}\n"
@@ -64,7 +64,10 @@ class NotificationService:
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
     def notificar_contato(self, contato_mensagem):
-        assunto = "Nova mensagem de contato pelo site"
+        if contato_mensagem.tipo == contato_mensagem.Tipo.EMPRESA:
+            assunto = "Novo pedido de orçamento — Empresas"
+        else:
+            assunto = "Nova mensagem de contato pelo site"
         mensagem = (
             f"Email: {contato_mensagem.email}\n"
             f"Telefone: {contato_mensagem.telefone or '-'}\n\n"

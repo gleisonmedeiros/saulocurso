@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Painel — Saulo Curso{% endblock %}
+{% block title %}Painel — RS Central dos Cursos{% endblock %}
 
 {% block content %}
 <section class="max-w-5xl mx-auto px-4 py-10">
@@ -9,6 +9,7 @@
             <p class="text-gray-500 text-sm">Cadastre e edite cursos, módulos, aulas e mentorias.</p>
         </div>
         <div class="flex gap-3">
+            <a href="{% url 'painel:faq_lista' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Perguntas frequentes</a>
             <a href="{% url 'painel:configuracoes' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Configurações do site</a>
             <a href="{% url 'painel:curso_novo' %}" class="bg-brand-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-brand-700">+ Novo curso</a>
         </div>

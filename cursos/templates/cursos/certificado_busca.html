@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Verificar certificado — RS Central dos Cursos{% endblock %}
+
+{% block content %}
+<section class="max-w-lg mx-auto px-4 py-16">
+    <h1 class="text-2xl font-bold mb-2 text-center">Verificar certificado</h1>
+    <p class="text-gray-500 text-center mb-8">Cola o código do certificado (encontrado abaixo do QR Code) pra conferir a autenticidade.</p>
+
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Código do certificado</label>
+            <input type="text" name="codigo" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600">
+            {% if erro %}<p class="text-red-600 text-xs mt-1">{{ erro }}</p>{% endif %}
+        </div>
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Verificar</button>
+    </form>
+</section>
+{% endblock %}

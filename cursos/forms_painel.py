@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo
+from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 INPUT_CLASS = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
 CHECKBOX_CLASS = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
@@ -38,6 +38,7 @@ class CursoForm(forms.ModelForm):
         model = Curso
         fields = [
             "titulo", "slug", "descricao_curta", "descricao", "preco",
+            "carga_horaria", "modalidade",
             "drive_capa_file_id", "capa_url_externa", "video_youtube_id", "ativo",
         ]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 6})}
@@ -99,6 +100,7 @@ class ConfiguracaoSiteForm(forms.ModelForm):
             "hero_titulo", "hero_subtitulo", "hero_video_youtube_id", "hero_video_drive_file_id",
             "sobre_texto",
             "contato_email", "contato_telefone", "whatsapp_numero",
+            "cnpj", "endereco", "instagram_url",
         ]
         widgets = {
             "hero_subtitulo": forms.Textarea(attrs={"rows": 3}),
@@ -133,3 +135,28 @@ class MentoriaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _aplicar_classes(self)
         self.fields["data_hora"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+
+class TurmaForm(forms.ModelForm):
+    class Meta:
+        model = Turma
+        fields = ["data_inicio", "local_ou_modalidade", "vagas", "observacao"]
+        widgets = {
+            "data_inicio": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _aplicar_classes(self)
+        self.fields["data_inicio"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+
+class PerguntaFrequenteForm(forms.ModelForm):
+    class Meta:
+        model = PerguntaFrequente
+        fields = ["pergunta", "resposta", "ordem", "ativa"]
+        widgets = {"resposta": forms.Textarea(attrs={"rows": 4})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _aplicar_classes(self)

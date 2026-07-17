@@ -24,4 +24,13 @@ urlpatterns = [
     path("cursos/<int:curso_pk>/mentorias/novo/", views.mentoria_nova, name="mentoria_nova"),
     path("mentorias/<int:pk>/editar/", views.mentoria_editar, name="mentoria_editar"),
     path("mentorias/<int:pk>/excluir/", views.mentoria_excluir, name="mentoria_excluir"),
+
+    path("cursos/<int:curso_pk>/turmas/novo/", views.turma_nova, name="turma_nova"),
+    path("turmas/<int:pk>/editar/", views.turma_editar, name="turma_editar"),
+    path("turmas/<int:pk>/excluir/", views.turma_excluir, name="turma_excluir"),
+
+    path("faq/", views.faq_lista, name="faq_lista"),
+    path("faq/novo/", views.faq_nova, name="faq_nova"),
+    path("faq/<int:pk>/editar/", views.faq_editar, name="faq_editar"),
+    path("faq/<int:pk>/excluir/", views.faq_excluir, name="faq_excluir"),
 ]

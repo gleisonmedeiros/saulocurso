@@ -1,0 +1,29 @@
+{% comment %}Espera: curso, mostrar_preco (bool){% endcomment %}
+<a href="{{ curso.get_absolute_url }}" class="group block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:shadow-red-600/10 hover:-translate-y-0.5 transition-all">
+    {% if curso.capa_url %}
+        <img src="{{ curso.capa_url }}" alt="{{ curso.titulo }}" class="w-full h-56 object-cover">
+    {% else %}
+        <div class="w-full h-56 bg-gradient-to-br from-red-600 via-orange-600 to-amber-500 flex flex-col items-center justify-center text-white font-bold px-6 text-center gap-2">
+            <span class="text-5xl">{{ curso.icone_tematico }}</span>
+            <span class="text-xl">{{ curso.titulo }}</span>
+        </div>
+    {% endif %}
+    <div class="p-6">
+        {% if curso.modalidade or curso.carga_horaria %}
+            <div class="flex flex-wrap gap-2 mb-3">
+                {% if curso.modalidade %}<span class="text-xs bg-ember text-white px-2 py-1 rounded-full font-semibold">{{ curso.get_modalidade_display }}</span>{% endif %}
+                {% if curso.carga_horaria %}<span class="text-xs bg-gray-800 dark:bg-gray-700 text-white px-2 py-1 rounded-full font-semibold">{{ curso.carga_horaria }}</span>{% endif %}
+            </div>
+        {% endif %}
+        <h3 class="font-semibold text-xl mb-2 group-hover:text-brand-600 dark:text-white">{{ curso.titulo }}</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-5">{{ curso.descricao_curta }}</p>
+        <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+            {% if mostrar_preco %}
+                <p class="text-brand-700 dark:text-orange-400 font-bold text-lg">R$ {{ curso.preco }}</p>
+                <span class="text-sm font-semibold text-brand-600 group-hover:underline">Ver curso &rarr;</span>
+            {% else %}
+                <span class="text-lg font-semibold text-brand-600 group-hover:underline">Saiba mais &rarr;</span>
+            {% endif %}
+        </div>
+    </div>
+</a>

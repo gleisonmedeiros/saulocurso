@@ -62,7 +62,7 @@
         <a href="{% url 'painel:mentoria_nova' curso.pk %}" class="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700">+ Nova mentoria</a>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mb-10">
         <ul class="divide-y divide-gray-100">
             {% for mentoria in mentorias %}
                 <li class="flex items-center justify-between px-5 py-3 text-sm">
@@ -74,6 +74,31 @@
                 </li>
             {% empty %}
                 <li class="px-5 py-6 text-sm text-gray-400 text-center">Nenhuma mentoria agendada.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Turmas (agenda pública)</h2>
+        <a href="{% url 'painel:turma_nova' curso.pk %}" class="text-sm bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700">+ Nova turma</a>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <ul class="divide-y divide-gray-100">
+            {% for turma in turmas %}
+                <li class="flex items-center justify-between px-5 py-3 text-sm">
+                    <span>
+                        {{ turma.data_inicio|date:"d/m/Y H:i" }}
+                        {% if turma.local_ou_modalidade %}— {{ turma.local_ou_modalidade }}{% endif %}
+                        {% if turma.vagas %}<span class="text-xs text-gray-400">· {{ turma.vagas }} vagas</span>{% endif %}
+                    </span>
+                    <span class="flex gap-3">
+                        <a href="{% url 'painel:turma_editar' turma.pk %}" class="text-gray-500 hover:underline">editar</a>
+                        <a href="{% url 'painel:turma_excluir' turma.pk %}" class="text-red-500 hover:underline">excluir</a>
+                    </span>
+                </li>
+            {% empty %}
+                <li class="px-5 py-6 text-sm text-gray-400 text-center">Nenhuma turma agendada.</li>
             {% endfor %}
         </ul>
     </div>

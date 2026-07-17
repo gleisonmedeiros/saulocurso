@@ -3,11 +3,20 @@ from django.urls import reverse
 
 
 class Curso(models.Model):
+    class Modalidade(models.TextChoices):
+        PRESENCIAL = "presencial", "Presencial"
+        ONLINE = "online", "Online"
+        HIBRIDO = "hibrido", "Híbrido"
+
     titulo = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True)
     descricao_curta = models.CharField("descrição curta (propaganda)", max_length=300)
     descricao = models.TextField("descrição completa")
     preco = models.DecimalField(max_digits=8, decimal_places=2)
+    carga_horaria = models.CharField(
+        "carga horária", max_length=50, blank=True, help_text="Ex: 20 horas, 16h teóricas + 4h práticas."
+    )
+    modalidade = models.CharField(max_length=20, choices=Modalidade.choices, blank=True)
     drive_capa_file_id = models.CharField(
         "ID da capa no Google Drive",
         max_length=100,
@@ -33,6 +42,25 @@ class Curso(models.Model):
 
     def get_absolute_url(self):
         return reverse("cursos:detalhe", args=[self.slug])
+
+    ICONES_TEMATICOS = [
+        (("bls", "suporte b", "rcp"), "❤️"),
+        (("aph", "pré-hospitalar", "pre-hospitalar"), "🚑"),
+        (("hemorragia", "bleed"), "🩸"),
+        (("supraglótico", "supraglotico", "laríngea", "laringea", "via", "aérea", "aerea"), "😷"),
+        (("urgência", "urgencia", "emergência", "emergencia"), "🏥"),
+        (("lei lucas", "escola"), "🏫"),
+        (("empresa", "in company", "corporativ"), "🏢"),
+        (("idoso", "cuidador"), "🧓"),
+    ]
+
+    @property
+    def icone_tematico(self):
+        titulo_lower = self.titulo.lower()
+        for palavras, emoji in self.ICONES_TEMATICOS:
+            if any(palavra in titulo_lower for palavra in palavras):
+                return emoji
+        return "🎓"
 
     @property
     def capa_url(self):
@@ -103,6 +131,40 @@ class MentoriaAoVivo(models.Model):
         return f"{self.titulo} ({self.data_hora:%d/%m/%Y %H:%M})"
 
 
+class Turma(models.Model):
+    """Data pública de início de uma turma — alimenta a página /agenda/."""
+
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="turmas")
+    data_inicio = models.DateTimeField("data de início")
+    local_ou_modalidade = models.CharField(
+        "local ou modalidade", max_length=200, blank=True,
+        help_text="Ex: Presencial — Auditório RS Central, ou 'Online ao vivo'.",
+    )
+    vagas = models.PositiveIntegerField(null=True, blank=True, help_text="Deixe em branco pra não exibir vagas.")
+    observacao = models.CharField(max_length=300, blank=True)
+
+    class Meta:
+        ordering = ["data_inicio"]
+
+    def __str__(self):
+        return f"{self.curso.titulo} — {self.data_inicio:%d/%m/%Y}"
+
+
+class PerguntaFrequente(models.Model):
+    pergunta = models.CharField(max_length=300)
+    resposta = models.TextField()
+    ordem = models.PositiveIntegerField(default=0)
+    ativa = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["ordem", "id"]
+        verbose_name = "Pergunta frequente"
+        verbose_name_plural = "Perguntas frequentes"
+
+    def __str__(self):
+        return self.pergunta
+
+
 class ConfiguracaoSite(models.Model):
     """Textos e contatos editáveis da tela inicial. Existe no máximo 1 linha (singleton)."""
 
@@ -134,6 +196,10 @@ class ConfiguracaoSite(models.Model):
         help_text="Só números, com código do país e DDD (ex: 5522998051490).",
     )
 
+    cnpj = models.CharField("CNPJ", max_length=20, blank=True)
+    endereco = models.CharField("endereço", max_length=255, blank=True)
+    instagram_url = models.URLField("link do Instagram", blank=True)
+
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -150,6 +216,11 @@ class ConfiguracaoSite(models.Model):
 
 
 class ContatoMensagem(models.Model):
+    class Tipo(models.TextChoices):
+        CONTATO = "contato", "Contato geral"
+        EMPRESA = "empresa", "Orçamento — Empresas"
+
+    tipo = models.CharField(max_length=10, choices=Tipo.choices, default=Tipo.CONTATO)
     email = models.EmailField()
     telefone = models.CharField(max_length=20, blank=True)
     mensagem = models.TextField()

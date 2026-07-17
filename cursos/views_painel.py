@@ -2,8 +2,10 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms_painel import AulaForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm, ModuloForm
-from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo
+from .forms_painel import (
+    AulaForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm, ModuloForm, PerguntaFrequenteForm, TurmaForm,
+)
+from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 
 @staff_member_required
@@ -33,7 +35,10 @@ def curso_detalhe(request, pk):
     curso = get_object_or_404(Curso, pk=pk)
     modulos = curso.modulos.prefetch_related("aulas")
     mentorias = curso.mentorias.all()
-    return render(request, "painel/curso_detalhe.html", {"curso": curso, "modulos": modulos, "mentorias": mentorias})
+    turmas = curso.turmas.all()
+    return render(request, "painel/curso_detalhe.html", {
+        "curso": curso, "modulos": modulos, "mentorias": mentorias, "turmas": turmas,
+    })
 
 
 @staff_member_required
@@ -200,3 +205,91 @@ def mentoria_excluir(request, pk):
         messages.success(request, "Mentoria excluída.")
         return redirect("painel:curso_detalhe", pk=curso.pk)
     return render(request, "painel/confirmar_exclusao.html", {"objeto": mentoria, "voltar_url": "painel:curso_detalhe", "voltar_pk": curso.pk})
+
+
+# --- Turma ---------------------------------------------------------------
+
+@staff_member_required
+def turma_nova(request, curso_pk):
+    curso = get_object_or_404(Curso, pk=curso_pk)
+    if request.method == "POST":
+        form = TurmaForm(request.POST)
+        if form.is_valid():
+            turma = form.save(commit=False)
+            turma.curso = curso
+            turma.save()
+            messages.success(request, "Turma agendada.")
+            return redirect("painel:curso_detalhe", pk=curso.pk)
+    else:
+        form = TurmaForm()
+    return render(request, "painel/turma_form.html", {"form": form, "curso": curso, "titulo_pagina": "Nova turma"})
+
+
+@staff_member_required
+def turma_editar(request, pk):
+    turma = get_object_or_404(Turma, pk=pk)
+    if request.method == "POST":
+        form = TurmaForm(request.POST, instance=turma)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Turma atualizada.")
+            return redirect("painel:curso_detalhe", pk=turma.curso.pk)
+    else:
+        form = TurmaForm(instance=turma)
+    return render(request, "painel/turma_form.html", {"form": form, "curso": turma.curso, "titulo_pagina": "Editar turma"})
+
+
+@staff_member_required
+def turma_excluir(request, pk):
+    turma = get_object_or_404(Turma, pk=pk)
+    curso = turma.curso
+    if request.method == "POST":
+        turma.delete()
+        messages.success(request, "Turma excluída.")
+        return redirect("painel:curso_detalhe", pk=curso.pk)
+    return render(request, "painel/confirmar_exclusao.html", {"objeto": turma, "voltar_url": "painel:curso_detalhe", "voltar_pk": curso.pk})
+
+
+# --- Pergunta frequente (FAQ) ----------------------------------------------
+
+@staff_member_required
+def faq_lista(request):
+    perguntas = PerguntaFrequente.objects.all()
+    return render(request, "painel/faq_lista.html", {"perguntas": perguntas})
+
+
+@staff_member_required
+def faq_nova(request):
+    if request.method == "POST":
+        form = PerguntaFrequenteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Pergunta criada.")
+            return redirect("painel:faq_lista")
+    else:
+        form = PerguntaFrequenteForm()
+    return render(request, "painel/faq_form.html", {"form": form, "titulo_pagina": "Nova pergunta frequente"})
+
+
+@staff_member_required
+def faq_editar(request, pk):
+    pergunta = get_object_or_404(PerguntaFrequente, pk=pk)
+    if request.method == "POST":
+        form = PerguntaFrequenteForm(request.POST, instance=pergunta)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Pergunta atualizada.")
+            return redirect("painel:faq_lista")
+    else:
+        form = PerguntaFrequenteForm(instance=pergunta)
+    return render(request, "painel/faq_form.html", {"form": form, "titulo_pagina": f"Editar — {pergunta.pergunta}"})
+
+
+@staff_member_required
+def faq_excluir(request, pk):
+    pergunta = get_object_or_404(PerguntaFrequente, pk=pk)
+    if request.method == "POST":
+        pergunta.delete()
+        messages.success(request, "Pergunta excluída.")
+        return redirect("painel:faq_lista")
+    return render(request, "painel/confirmar_exclusao.html", {"objeto": pergunta, "voltar_url": "painel:faq_lista", "voltar_pk": None})

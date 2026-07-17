@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from matriculas.mixins import matricula_required_aula, matricula_required_curso
 from matriculas.models import AulaConcluida, Certificado, Matricula
@@ -13,12 +14,13 @@ from matriculas.progresso import calcular_progresso, emitir_certificado_se_compl
 from notificacoes.services import NotificationService
 
 from .forms import ContatoForm
-from .models import ContatoMensagem, Curso
+from .models import ContatoMensagem, Curso, PerguntaFrequente, Turma
 
 
 def home(request):
-    cursos = Curso.objects.filter(ativo=True)[:6]
-    return render(request, "cursos/home.html", {"cursos": cursos})
+    cursos = Curso.objects.filter(ativo=True)[:8]
+    faqs = PerguntaFrequente.objects.filter(ativa=True)
+    return render(request, "cursos/home.html", {"cursos": cursos, "faqs": faqs})
 
 
 def lista_cursos(request):
@@ -31,6 +33,7 @@ def contato(request):
         form = ContatoForm(request.POST)
         if form.is_valid():
             contato_mensagem = ContatoMensagem.objects.create(
+                tipo=ContatoMensagem.Tipo.CONTATO,
                 email=form.cleaned_data["email"],
                 telefone=form.cleaned_data["telefone"],
                 mensagem=form.cleaned_data["mensagem"],
@@ -42,6 +45,49 @@ def contato(request):
         form = ContatoForm()
 
     return render(request, "cursos/contato.html", {"form": form})
+
+
+def empresas(request):
+    if request.method == "POST":
+        form = ContatoForm(request.POST)
+        if form.is_valid():
+            contato_mensagem = ContatoMensagem.objects.create(
+                tipo=ContatoMensagem.Tipo.EMPRESA,
+                email=form.cleaned_data["email"],
+                telefone=form.cleaned_data["telefone"],
+                mensagem=form.cleaned_data["mensagem"],
+            )
+            NotificationService().notificar_contato(contato_mensagem)
+            messages.success(request, "Pedido de orçamento enviado! Vamos retornar em breve.")
+            return redirect("cursos:empresas")
+    else:
+        form = ContatoForm()
+
+    return render(request, "cursos/empresas.html", {"form": form})
+
+
+def agenda(request):
+    turmas = (
+        Turma.objects.filter(curso__ativo=True, data_inicio__gte=timezone.now())
+        .select_related("curso")
+        .order_by("data_inicio")
+    )
+    return render(request, "cursos/agenda.html", {"turmas": turmas})
+
+
+def certificado_busca(request):
+    erro = None
+    if request.method == "POST":
+        codigo = request.POST.get("codigo", "").strip()
+        try:
+            return redirect("cursos:verificar_certificado", codigo=codigo)
+        except Exception:
+            erro = "Código inválido — confira e tente novamente."
+    return render(request, "cursos/certificado_busca.html", {"erro": erro})
+
+
+def privacidade(request):
+    return render(request, "cursos/privacidade.html")
 
 
 def detalhe(request, slug):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Aula, ContatoMensagem, Curso, MentoriaAoVivo, Modulo
+from .models import Aula, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 
 class AulaInline(admin.TabularInline):
@@ -18,8 +18,8 @@ class ModuloInline(admin.StackedInline):
 
 @admin.register(Curso)
 class CursoAdmin(admin.ModelAdmin):
-    list_display = ("titulo", "preco", "ativo", "criado_em")
-    list_filter = ("ativo",)
+    list_display = ("titulo", "preco", "carga_horaria", "modalidade", "ativo", "criado_em")
+    list_filter = ("ativo", "modalidade")
     search_fields = ("titulo", "descricao_curta")
     prepopulated_fields = {"slug": ("titulo",)}
     inlines = [ModuloInline]
@@ -44,9 +44,22 @@ class MentoriaAoVivoAdmin(admin.ModelAdmin):
     list_filter = ("curso",)
 
 
+@admin.register(Turma)
+class TurmaAdmin(admin.ModelAdmin):
+    list_display = ("curso", "data_inicio", "vagas")
+    list_filter = ("curso",)
+
+
+@admin.register(PerguntaFrequente)
+class PerguntaFrequenteAdmin(admin.ModelAdmin):
+    list_display = ("pergunta", "ordem", "ativa")
+    list_editable = ("ordem", "ativa")
+
+
 @admin.register(ContatoMensagem)
 class ContatoMensagemAdmin(admin.ModelAdmin):
-    list_display = ("email", "telefone", "enviado_em")
+    list_display = ("email", "telefone", "tipo", "enviado_em")
+    list_filter = ("tipo",)
     search_fields = ("email", "telefone", "mensagem")
 
     def has_add_permission(self, request):

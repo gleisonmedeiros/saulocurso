@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Verificar certificado — Saulo Curso{% endblock %}
+{% block title %}Verificar certificado — RS Central dos Cursos{% endblock %}
 
 {% block content %}
 <section class="max-w-lg mx-auto px-4 py-16">
@@ -7,7 +7,7 @@
         <div class="bg-white border-2 border-green-200 rounded-2xl p-8 text-center">
             <p class="text-4xl mb-3">✅</p>
             <h1 class="text-xl font-bold text-green-700 mb-1">Certificado válido</h1>
-            <p class="text-gray-500 text-sm mb-6">Este certificado foi emitido pela Saulo Curso e é autêntico.</p>
+            <p class="text-gray-500 text-sm mb-6">Este certificado foi emitido pela RS Central dos Cursos e é autêntico.</p>
 
             <div class="text-left bg-gray-50 rounded-xl p-5 space-y-2 text-sm">
                 <p><span class="text-gray-500">Aluno:</span> <strong>{{ certificado.aluno.get_full_name|default:certificado.aluno.username }}</strong></p>
