@@ -1,28 +1,35 @@
+{% load static %}
 {% comment %}Espera: curso, mostrar_preco (bool){% endcomment %}
-<a href="{{ curso.get_absolute_url }}" class="group block bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl hover:shadow-red-600/10 hover:-translate-y-0.5 transition-all">
+<a href="{{ curso.get_absolute_url }}" class="group block bg-gray-950 rounded-2xl border border-red-900/30 overflow-hidden hover:shadow-[0_0_25px_rgba(220,38,38,0.4)] hover:-translate-y-1 transition-all duration-300">
     {% if curso.capa_url %}
-        <img src="{{ curso.capa_url }}" alt="{{ curso.titulo }}" class="w-full h-56 object-cover">
+        <img src="{{ curso.capa_url }}" alt="{{ curso.titulo }}" class="w-full aspect-[4/3] object-cover object-center">
     {% else %}
-        <div class="w-full h-56 bg-gradient-to-br from-red-600 via-orange-600 to-amber-500 flex flex-col items-center justify-center text-white font-bold px-6 text-center gap-2">
-            <span class="text-5xl">{{ curso.icone_tematico }}</span>
-            <span class="text-xl">{{ curso.titulo }}</span>
-        </div>
+        {% if "APH" in curso.titulo or "Atendimento" in curso.titulo %}
+            <img src="{% static 'img/aph_course.png' %}" alt="{{ curso.titulo }}" class="w-full aspect-[4/3] object-cover object-center">
+        {% elif "BLS" in curso.titulo or "Life" in curso.titulo %}
+            <img src="{% static 'img/bls_course.png' %}" alt="{{ curso.titulo }}" class="w-full aspect-[4/3] object-cover object-center">
+        {% elif "Lucas" in curso.titulo or "Escola" in curso.titulo %}
+            <img src="{% static 'img/lei_lucas_course.png' %}" alt="{{ curso.titulo }}" class="w-full aspect-[4/3] object-cover object-center">
+        {% else %}
+            <img src="{% static 'img/empresas_training.png' %}" alt="{{ curso.titulo }}" class="w-full aspect-[4/3] object-cover object-center">
+        {% endif %}
     {% endif %}
-    <div class="p-6">
+    <div class="p-6 relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         {% if curso.modalidade or curso.carga_horaria %}
-            <div class="flex flex-wrap gap-2 mb-3">
-                {% if curso.modalidade %}<span class="text-xs bg-ember text-white px-2 py-1 rounded-full font-semibold">{{ curso.get_modalidade_display }}</span>{% endif %}
-                {% if curso.carga_horaria %}<span class="text-xs bg-gray-800 dark:bg-gray-700 text-white px-2 py-1 rounded-full font-semibold">{{ curso.carga_horaria }}</span>{% endif %}
+            <div class="flex flex-wrap gap-2 mb-4">
+                {% if curso.modalidade %}<span class="text-[11px] bg-ember text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{{ curso.get_modalidade_display }}</span>{% endif %}
+                {% if curso.carga_horaria %}<span class="text-[11px] bg-black border border-red-900/50 text-gray-300 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{{ curso.carga_horaria }}</span>{% endif %}
             </div>
         {% endif %}
-        <h3 class="font-semibold text-xl mb-2 group-hover:text-brand-600 dark:text-white">{{ curso.titulo }}</h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-5">{{ curso.descricao_curta }}</p>
-        <div class="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-4">
+        <h3 class="font-bold text-xl mb-2 group-hover:text-amber-500 text-white transition-colors">{{ curso.titulo }}</h3>
+        <p class="text-gray-400 mb-6 text-sm line-clamp-3">{{ curso.descricao_curta }}</p>
+        <div class="flex items-center justify-between border-t border-red-900/30 pt-5">
             {% if mostrar_preco %}
-                <p class="text-brand-700 dark:text-orange-400 font-bold text-lg">R$ {{ curso.preco }}</p>
-                <span class="text-sm font-semibold text-brand-600 group-hover:underline">Ver curso &rarr;</span>
+                <p class="text-amber-500 font-extrabold text-lg">R$ {{ curso.preco }}</p>
+                <span class="text-sm font-bold text-red-500 group-hover:text-amber-400 transition-colors flex items-center gap-1">Ver curso <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></span>
             {% else %}
-                <span class="text-lg font-semibold text-brand-600 group-hover:underline">Saiba mais &rarr;</span>
+                <span class="text-sm font-bold text-red-500 group-hover:text-amber-400 transition-colors flex items-center gap-1">Saiba mais <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></span>
             {% endif %}
         </div>
     </div>

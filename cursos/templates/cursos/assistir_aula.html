@@ -17,7 +17,13 @@
 
     {% if aula.drive_pdf_file_id %}
         <div class="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6">
-            <div class="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-600">Apostila</div>
+            <div class="px-4 py-2 border-b border-gray-200 text-sm font-medium text-gray-600 flex items-center justify-between">
+                <span>Apostila</span>
+                <a id="pdf-download-btn" href="#" target="_blank" rel="noopener" class="hidden inline-flex items-center gap-1.5 bg-brand-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-brand-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Baixar PDF
+                </a>
+            </div>
             <div id="pdf-outer" style="height: 90vh; position: relative;">
                 <div id="pdf-wrap" class="w-full h-full flex items-center justify-center text-gray-400 text-sm">Carregando apostila...</div>
                 <button type="button" id="pdf-fullscreen-btn" title="Tela cheia" class="absolute bottom-3 left-3 z-10 bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg">
@@ -160,6 +166,10 @@
             iframe.referrerPolicy = 'strict-origin-when-cross-origin';
             iframe.src = `https://drive.google.com/file/d/${data.file_id}/preview`;
             wrap.replaceWith(iframe);
+
+            const downloadBtn = document.getElementById('pdf-download-btn');
+            downloadBtn.href = `https://drive.google.com/uc?export=download&id=${data.file_id}`;
+            downloadBtn.classList.remove('hidden');
 
             {
                 // Cobre o ícone "abrir em outra janela" do canto superior direito do Drive.

@@ -1,33 +1,24 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}RS Central dos Cursos — Aprenda com quem faz{% endblock %}
 
 {% block content %}
-<section class="relative overflow-hidden bg-gradient-to-br from-black via-red-950 to-orange-900 text-white">
-    <div class="absolute inset-0 opacity-40" style="background-image: radial-gradient(circle at 20% 20%, #f97316 0, transparent 35%), radial-gradient(circle at 80% 60%, #dc2626 0, transparent 30%);"></div>
+<section class="relative overflow-hidden bg-red-900 text-white min-h-[70vh] flex items-center border-b border-red-900/50">
+    <div class="absolute inset-0 bg-[url('{% static 'img/aph_course.png' %}')] bg-cover bg-center bg-no-repeat opacity-40"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-red-950 via-red-900/80 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-red-950 via-red-900/60 to-transparent"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 py-8 md:py-12 grid md:grid-cols-5 gap-10 items-center">
-        <div class="text-center md:text-left md:col-span-2">
-            <span class="inline-block bg-ember text-white text-xs font-bold tracking-wide uppercase px-3 py-1 rounded-full mb-4">Turmas abertas</span>
-            <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">{{ config_site.hero_titulo }}</h1>
-            <p class="text-lg md:text-xl text-gray-300 max-w-xl mx-auto md:mx-0">
-                {{ config_site.hero_subtitulo }}
-            </p>
-        </div>
-
-        {% if config_site.hero_video_drive_file_id %}
-        <div class="md:col-span-3 rounded-2xl overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/20 aspect-video">
-            <iframe class="w-full h-full" src="https://drive.google.com/file/d/{{ config_site.hero_video_drive_file_id }}/preview" title="Vídeo de apresentação" referrerpolicy="strict-origin-when-cross-origin" frameborder="0" allow="autoplay"></iframe>
-        </div>
-        {% elif config_site.hero_video_youtube_id %}
-        <div class="md:col-span-3 rounded-2xl overflow-hidden shadow-2xl shadow-black/30 ring-1 ring-white/20 aspect-video">
-            <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ config_site.hero_video_youtube_id }}" title="Vídeo de apresentação" referrerpolicy="strict-origin-when-cross-origin" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-        {% endif %}
+    <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
+        <span class="inline-block bg-ember text-white text-xs font-bold tracking-wide uppercase px-4 py-1.5 rounded-full mb-6 shadow-[0_0_15px_rgba(220,38,38,0.5)]">Turmas abertas</span>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 leading-tight text-white drop-shadow-xl">{{ config_site.hero_titulo }}</h1>
+        <p class="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto">
+            {{ config_site.hero_subtitulo }}
+        </p>
     </div>
 </section>
 
-<section id="cursos" class="bg-gray-900">
-    <div class="max-w-6xl mx-auto px-4 py-8 md:py-10">
+<section id="cursos" class="bg-black relative z-10 -mt-4 pt-12 pb-16 border-t border-red-900/30">
+    <div class="max-w-6xl mx-auto px-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <h2 class="text-2xl md:text-3xl font-bold text-ember">Nossos cursos</h2>
             <a href="{% url 'cursos:lista' %}" class="inline-block border-2 border-brand-600 text-white font-bold px-5 py-2 rounded-lg hover:bg-brand-600 text-center">Todos os cursos disponíveis</a>
@@ -45,75 +36,82 @@
     </div>
 </section>
 
-<section class="bg-white dark:bg-gray-950 border-y border-gray-100 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 py-14">
-        <h2 class="text-2xl md:text-3xl font-bold text-center mb-2 text-ember">Por que escolher a RS Central dos Cursos</h2>
-        <svg class="w-16 h-4 mx-auto mb-10 text-brand-600" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="0,10 25,10 32,2 40,18 48,10 100,10"/></svg>
+<section class="bg-black border-y border-red-900/30 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[url('{% static 'img/certificados_img.png' %}')] bg-cover bg-center md:bg-fixed"></div>
+    <div class="absolute inset-0 bg-black/80"></div>
+    <div class="relative max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+            <img src="{% static 'img/certificados_img.png' %}" alt="Certificados" class="w-full rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.3)] ring-1 ring-red-900/50">
+        </div>
+        <div>
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-ember">Por que escolher a RS Central</h2>
+            <svg class="w-16 h-4 mb-10 text-brand-600" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="0,10 25,10 32,2 40,18 48,10 100,10"/></svg>
 
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10">
+            <div class="grid sm:grid-cols-2 gap-x-6 gap-y-8">
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">📱</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Certificado com QR Code</p>
             </div>
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">🎓</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Instrutores com experiência prática</p>
             </div>
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">📋</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Metodologia baseada em protocolos atualizados</p>
             </div>
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">🩺</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Aulas práticas com simulação realística</p>
             </div>
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">📚</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Material didático exclusivo</p>
             </div>
             <div class="text-center">
-                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-600 via-orange-500 to-amber-400 text-3xl shadow-lg shadow-red-600/40">💻</span>
+                <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Plataforma exclusiva do aluno</p>
             </div>
         </div>
     </div>
 </section>
 
-<section class="max-w-6xl mx-auto px-4 py-14 text-center">
-    <h2 class="text-2xl md:text-3xl font-bold mb-2 text-ember">Para quem são os cursos</h2>
-    <svg class="w-16 h-4 mx-auto mb-8 text-brand-600" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="0,10 25,10 32,2 40,18 48,10 100,10"/></svg>
+<section class="max-w-6xl mx-auto px-4 py-16 text-center">
+    <h2 class="text-3xl font-bold mb-3 text-ember">Para quem são os cursos</h2>
+    <svg class="w-16 h-4 mx-auto mb-10 text-brand-600" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="0,10 25,10 32,2 40,18 48,10 100,10"/></svg>
 
-    <div class="flex flex-wrap justify-center gap-3">
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+    <div class="flex flex-wrap justify-center gap-4">
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Enfermeiros
         </span>
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Técnicos de Enfermagem
         </span>
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Acadêmicos
         </span>
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Socorristas
         </span>
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Empresas
         </span>
-        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950 dark:to-orange-950 border border-red-200 dark:border-red-800 text-red-800 dark:text-orange-200 rounded-full px-4 py-2 text-sm font-semibold">
-            <span class="w-2 h-2 rounded-full bg-gradient-to-br from-red-600 to-amber-400"></span>
+        <span class="inline-flex items-center gap-2 bg-gradient-to-r from-red-950 to-orange-950 border border-red-900/50 text-orange-200 rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+            <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
             Órgãos Públicos
         </span>
     </div>
 </section>
 
-<section class="relative overflow-hidden bg-gradient-to-br from-black via-red-950 to-orange-900 text-white">
-    <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 80% 20%, #f59e0b 0, transparent 35%);"></div>
-    <div class="relative max-w-6xl mx-auto px-4 py-14 grid md:grid-cols-2 gap-8 items-center">
+<section class="relative overflow-hidden bg-black text-white border-y border-red-900/30">
+    <div class="absolute inset-0 opacity-20 bg-[url('{% static 'img/bls_course.png' %}')] bg-cover bg-center md:bg-fixed"></div>
+    <div class="absolute inset-0 bg-black/80"></div>
+    <div class="relative max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-12 items-center">
         <div>
             <h2 class="text-2xl md:text-3xl font-bold mb-3 text-ember">Treinamentos in company</h2>
             <p class="text-gray-300 mb-6">Levamos a capacitação até sua empresa — treinamentos personalizados para empresas, indústrias, clínicas, hospitais, escolas e prefeituras.</p>
@@ -146,13 +144,16 @@
             <a href="{% url 'accounts:login' %}" class="inline-block bg-ember text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-red-600/30">Entrar</a>
         {% endif %}
     </div>
-    <div class="bg-gradient-to-br from-red-600 via-orange-600 to-amber-500 rounded-2xl h-56 md:h-64 flex items-center justify-center text-6xl shadow-lg shadow-red-600/30">🎓</div>
+    <div class="h-64 md:h-80 w-full relative rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] ring-1 ring-red-900/50">
+        <img src="{% static 'img/lei_lucas_course.png' %}" alt="Área do aluno" class="absolute inset-0 w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-red-900/80 to-transparent"></div>
+    </div>
 </section>
 
-<section class="bg-white dark:bg-gray-950 border-y border-gray-100 dark:border-gray-800">
-    <div class="max-w-3xl mx-auto px-4 py-14">
-        <h2 class="text-2xl md:text-3xl font-bold text-center mb-8 text-ember">Perguntas frequentes</h2>
-        <div class="divide-y divide-gray-200 dark:divide-gray-800">
+<section class="bg-black border-y border-red-900/30">
+    <div class="max-w-3xl mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-center mb-10 text-ember">Perguntas frequentes</h2>
+        <div class="divide-y divide-red-900/30">
             {% for faq in faqs %}
                 <details class="group py-4">
                     <summary class="flex items-center justify-between gap-4 cursor-pointer font-semibold list-none">
@@ -168,14 +169,21 @@
     </div>
 </section>
 
-<section id="sobre" class="max-w-6xl mx-auto px-4 py-16">
-    <h2 class="text-2xl md:text-3xl font-bold mb-3 text-ember">Sobre</h2>
-    <p class="text-gray-600 dark:text-gray-400 max-w-3xl whitespace-pre-line">{{ config_site.sobre_texto }}</p>
+<section id="sobre" class="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-12 items-center">
+    <div class="order-2 md:order-1">
+        <h2 class="text-3xl font-bold mb-4 text-ember">Sobre nós</h2>
+        <svg class="w-16 h-4 mb-8 text-brand-600" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="3"><polyline points="0,10 25,10 32,2 40,18 48,10 100,10"/></svg>
+        <p class="text-gray-300 max-w-xl whitespace-pre-line leading-relaxed">{{ config_site.sobre_texto }}</p>
+    </div>
+    <div class="order-1 md:order-2">
+        <img src="{% static 'img/logo.jpg' %}" alt="RS Central dos Cursos" class="w-full rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.3)] ring-1 ring-red-900/50">
+    </div>
 </section>
 
-<section class="relative overflow-hidden bg-gradient-to-br from-black via-red-950 to-orange-900 text-white">
-    <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 30% 30%, #f97316 0, transparent 40%), radial-gradient(circle at 70% 70%, #dc2626 0, transparent 40%);"></div>
-    <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
+<section class="relative overflow-hidden bg-black text-white border-t border-red-900/30">
+    <div class="absolute inset-0 opacity-20 bg-[url('{% static 'img/empresas_training.png' %}')] bg-cover bg-center"></div>
+    <div class="absolute inset-0 bg-black/80"></div>
+    <div class="relative max-w-4xl mx-auto px-4 py-20 text-center">
         <h2 class="text-2xl md:text-4xl font-extrabold mb-4">Pronto para elevar seu nível profissional?</h2>
         <p class="text-gray-300 max-w-xl mx-auto mb-8">Invista em uma formação com foco em qualidade, prática e atualização constante.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">

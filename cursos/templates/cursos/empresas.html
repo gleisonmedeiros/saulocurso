@@ -1,75 +1,79 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Empresas — RS Central dos Cursos{% endblock %}
 
 {% block content %}
 <section class="relative overflow-hidden bg-gradient-to-br from-black via-red-950 to-orange-900 text-white">
     <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 80% 20%, #f59e0b 0, transparent 35%);"></div>
-    <div class="relative max-w-3xl mx-auto px-4 py-16 text-center">
-        <h1 class="text-2xl md:text-3xl font-bold mb-2">Treinamentos que protegem e geram resultados</h1>
-        <p class="text-gray-300">Levamos a capacitação até sua empresa — treinamentos in company personalizados para:</p>
-    </div>
-</section>
-
-<section class="max-w-3xl mx-auto px-4 py-16">
-    <ul class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10 text-sm">
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Empresas</li>
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Indústrias</li>
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Clínicas</li>
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Hospitais</li>
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Escolas</li>
-        <li class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-center font-medium">Prefeituras</li>
-    </ul>
-
-    <ul class="space-y-3 mb-10">
-        <li class="flex items-start gap-3">
-            <span class="shrink-0 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center text-sm">👥</span>
-            <span class="pt-1 text-gray-700 dark:text-gray-300">Treinamentos In Company personalizados</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <span class="shrink-0 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center text-sm">🛡️</span>
-            <span class="pt-1 text-gray-700 dark:text-gray-300">NRs e normas regulamentadoras</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <span class="shrink-0 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center text-sm">❤️</span>
-            <span class="pt-1 text-gray-700 dark:text-gray-300">Redução de riscos e acidentes</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <span class="shrink-0 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center text-sm">📋</span>
-            <span class="pt-1 text-gray-700 dark:text-gray-300">Conformidade legal e responsabilidade</span>
-        </li>
-        <li class="flex items-start gap-3">
-            <span class="shrink-0 w-8 h-8 rounded-full bg-ember text-white flex items-center justify-center text-sm">📈</span>
-            <span class="pt-1 text-gray-700 dark:text-gray-300">Equipes capacitadas, empresas mais seguras</span>
-        </li>
-    </ul>
-
-    <div class="grid md:grid-cols-2 gap-8">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-            <h2 class="font-semibold mb-4">Outros canais</h2>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-2">{{ config_site.contato_email }}</p>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">{{ config_site.contato_telefone }}</p>
-            <a href="https://wa.me/{{ config_site.whatsapp_numero }}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700">
-                Falar no WhatsApp
-            </a>
+    <div class="relative max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+            <h1 class="text-3xl md:text-5xl font-bold mb-4 leading-tight text-ember">Treinamentos que protegem e geram resultados</h1>
+            <p class="text-xl text-gray-300 mb-6">Levamos a capacitação até sua empresa — treinamentos in company personalizados.</p>
         </div>
-
-        <form method="post" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-4">
+        <form method="post" class="bg-gray-950 border border-red-900/30 rounded-xl p-8 space-y-5 shadow-xl shadow-red-900/10">
             {% csrf_token %}
-            <h2 class="font-semibold">Solicitar orçamento</h2>
+            <h2 class="font-bold text-xl mb-2 text-ember">Solicitar orçamento</h2>
             {% for field in form %}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
-                    {{ field }}
+                    <label class="block text-sm font-semibold text-gray-300 mb-1.5">{{ field.label }}</label>
+                    <div class="text-black">
+                        {{ field }}
+                    </div>
                     {% for error in field.errors %}
-                        <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+                        <p class="text-red-500 text-xs mt-1.5 font-semibold">{{ error }}</p>
                     {% endfor %}
                 </div>
             {% endfor %}
-            <button type="submit" class="w-full bg-ember text-white py-2.5 rounded-lg font-bold">
+            <button type="submit" class="w-full bg-ember text-white py-3 rounded-lg font-bold mt-2">
                 Solicitar orçamento
             </button>
         </form>
+    </div>
+</section>
+
+<section class="max-w-4xl mx-auto px-4 py-16">
+    <ul class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10 text-sm">
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Empresas</li>
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Indústrias</li>
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Clínicas</li>
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Hospitais</li>
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Escolas</li>
+        <li class="bg-gray-950 border border-red-900/30 rounded-lg px-4 py-3 text-center font-medium shadow-sm shadow-red-900/20 text-gray-300">Prefeituras</li>
+    </ul>
+
+    <ul class="space-y-4 mb-14 text-lg">
+        <li class="flex items-center gap-4">
+            <span class="shrink-0 w-10 h-10 rounded-full bg-ember text-white flex items-center justify-center shadow-lg shadow-red-600/30">👥</span>
+            <span class="text-gray-300 font-medium">Treinamentos In Company personalizados</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="shrink-0 w-10 h-10 rounded-full bg-ember text-white flex items-center justify-center shadow-lg shadow-red-600/30">🛡️</span>
+            <span class="text-gray-300 font-medium">NRs e normas regulamentadoras</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="shrink-0 w-10 h-10 rounded-full bg-ember text-white flex items-center justify-center shadow-lg shadow-red-600/30">❤️</span>
+            <span class="text-gray-300 font-medium">Redução de riscos e acidentes</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="shrink-0 w-10 h-10 rounded-full bg-ember text-white flex items-center justify-center shadow-lg shadow-red-600/30">📋</span>
+            <span class="text-gray-300 font-medium">Conformidade legal e responsabilidade</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="shrink-0 w-10 h-10 rounded-full bg-ember text-white flex items-center justify-center shadow-lg shadow-red-600/30">📈</span>
+            <span class="text-gray-300 font-medium">Equipes capacitadas, empresas mais seguras</span>
+        </li>
+    </ul>
+
+    <div class="bg-gray-950 border border-red-900/30 rounded-xl p-8 shadow-xl shadow-red-900/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="font-bold text-xl mb-2 text-ember">Outros canais</h2>
+            <p class="text-gray-400">{{ config_site.contato_email }}</p>
+            <p class="text-gray-400">{{ config_site.contato_telefone }}</p>
+        </div>
+        <a href="https://wa.me/{{ config_site.whatsapp_numero }}" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg shadow-green-900/30 transition-all shrink-0">
+            Falar no WhatsApp
+        </a>
     </div>
 </section>
 {% endblock %}

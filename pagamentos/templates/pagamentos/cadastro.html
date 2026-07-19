@@ -3,10 +3,16 @@
 
 {% block content %}
 <section class="max-w-md mx-auto px-4 py-16">
-    <h1 class="text-2xl font-bold mb-2 text-center">Pagamento aprovado!</h1>
-    <p class="text-gray-500 text-center mb-6">Falta só completar seu cadastro pra liberar o acesso ao curso <strong>{{ curso.titulo }}</strong>.</p>
+    <div class="flex justify-center mb-4">
+        <span class="inline-flex items-center gap-2 bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+            Pagamento aprovado
+        </span>
+    </div>
+    <h1 class="text-2xl font-bold mb-2 text-center text-gray-900">Complete seu cadastro</h1>
+    <p class="text-gray-500 text-center mb-8">Falta só isso pra liberar o acesso ao curso <strong class="text-gray-900">{{ curso.titulo }}</strong>.</p>
 
-    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
         {% csrf_token %}
         {% for field in form %}
             <div>

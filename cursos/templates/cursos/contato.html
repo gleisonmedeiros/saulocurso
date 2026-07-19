@@ -1,37 +1,43 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Contato — RS Central dos Cursos{% endblock %}
 
 {% block content %}
-<section class="max-w-3xl mx-auto px-4 py-16">
-    <h1 class="text-2xl md:text-3xl font-bold mb-2 text-center">Fale conosco</h1>
-    <p class="text-gray-500 text-center mb-10">Dúvidas sobre os cursos? Manda sua mensagem que a gente responde.</p>
+<section class="relative overflow-hidden bg-gradient-to-br from-black via-red-950 to-orange-900 text-white">
+    <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at 80% 20%, #f59e0b 0, transparent 35%);"></div>
+    <div class="relative max-w-2xl mx-auto px-4 py-16">
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 text-ember text-center">Fale conosco</h1>
+        <p class="text-gray-300 mb-10 text-center text-lg">Dúvidas sobre os cursos? Mande sua mensagem que a gente responde.</p>
 
-    <div class="grid md:grid-cols-2 gap-8">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-            <h2 class="font-semibold mb-4">Outros canais</h2>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-2">{{ config_site.contato_email }}</p>
-            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">{{ config_site.contato_telefone }}</p>
-            <a href="https://wa.me/{{ config_site.whatsapp_numero }}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700">
-                Falar no WhatsApp
-            </a>
+        <div class="space-y-8">
+            <div class="bg-gray-950 border border-red-900/30 rounded-xl p-8 shadow-xl shadow-red-900/10">
+                <h2 class="font-bold text-xl mb-4 text-ember">Outros canais</h2>
+                <p class="text-gray-400 mb-2">{{ config_site.contato_email }}</p>
+                <p class="text-gray-400 mb-6">{{ config_site.contato_telefone }}</p>
+                <a href="https://wa.me/{{ config_site.whatsapp_numero }}" target="_blank" rel="noopener"
+                   class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 shadow-lg shadow-green-900/30 transition-all">
+                    Falar no WhatsApp
+                </a>
+            </div>
+
+            <form method="post" class="bg-gray-950 border border-red-900/30 rounded-xl p-8 space-y-5 shadow-xl shadow-red-900/10">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-1.5">{{ field.label }}</label>
+                        <div class="text-black">
+                            {{ field }}
+                        </div>
+                        {% for error in field.errors %}
+                            <p class="text-red-500 text-xs mt-1.5 font-semibold">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="w-full bg-ember text-white py-3 rounded-lg font-bold mt-2">
+                    Enviar
+                </button>
+            </form>
         </div>
-
-        <form method="post" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-4">
-            {% csrf_token %}
-            {% for field in form %}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ field.label }}</label>
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <p class="text-red-600 text-xs mt-1">{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            <button type="submit" class="w-full bg-ember text-white py-2.5 rounded-lg font-bold">
-                Enviar
-            </button>
-        </form>
     </div>
 </section>
 {% endblock %}
