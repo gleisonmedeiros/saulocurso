@@ -24,11 +24,19 @@ class Curso(models.Model):
         help_text="Pega o ID em drive.google.com/file/d/ESSE-TRECHO-AQUI/view — a imagem precisa estar "
         "compartilhada como \"qualquer pessoa com o link\".",
     )
+    capa_upload = models.ImageField(
+        "capa (upload direto)",
+        upload_to="cursos/capas/",
+        blank=True,
+        null=True,
+        help_text="Envia o arquivo direto do computador. Se preencher o ID do Drive também, o Drive "
+        "tem prioridade sobre esse upload.",
+    )
     capa_url_externa = models.URLField(
         "URL da capa (link direto)",
         blank=True,
-        help_text="Alternativa ao Drive — cola o link direto da imagem (ex: termina em .jpg/.png). "
-        "Se preencher os dois, o Drive tem prioridade.",
+        help_text="Última opção — cola o link direto da imagem (ex: termina em .jpg/.png). Só é usada "
+        "se não tiver Drive nem upload preenchido.",
     )
     video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
@@ -66,6 +74,8 @@ class Curso(models.Model):
     def capa_url(self):
         if self.drive_capa_file_id:
             return f"https://drive.google.com/thumbnail?id={self.drive_capa_file_id}&sz=w1000"
+        if self.capa_upload:
+            return self.capa_upload.url
         if self.capa_url_externa:
             return self.capa_url_externa
         return ""

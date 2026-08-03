@@ -1,11 +1,7 @@
-import io
-
-import qrcode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 
 from matriculas.mixins import matricula_required_aula, matricula_required_curso
@@ -73,17 +69,6 @@ def agenda(request):
         .order_by("data_inicio")
     )
     return render(request, "cursos/agenda.html", {"turmas": turmas})
-
-
-def certificado_busca(request):
-    erro = None
-    if request.method == "POST":
-        codigo = request.POST.get("codigo", "").strip()
-        try:
-            return redirect("cursos:verificar_certificado", codigo=codigo)
-        except Exception:
-            erro = "Código inválido — confira e tente novamente."
-    return render(request, "cursos/certificado_busca.html", {"erro": erro})
 
 
 def privacidade(request):
@@ -158,19 +143,6 @@ def certificado(request, slug, curso):
         return redirect("cursos:conteudo", slug=curso.slug)
 
     return render(request, "cursos/certificado.html", {"curso": curso, "certificado": cert})
-
-
-def verificar_certificado(request, codigo):
-    cert = Certificado.objects.filter(codigo=codigo).select_related("aluno", "curso").first()
-    return render(request, "cursos/verificar_certificado.html", {"certificado": cert, "codigo": codigo})
-
-
-def certificado_qrcode(request, codigo):
-    url = request.build_absolute_uri(reverse("cursos:verificar_certificado", args=[codigo]))
-    img = qrcode.make(url, box_size=6, border=1)
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 
 @matricula_required_aula

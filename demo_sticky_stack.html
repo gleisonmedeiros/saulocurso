@@ -1,0 +1,175 @@
+<title>Demo — sticky stack scroll</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --red-dark: #450a0a;
+    --red-mid: #991b1b;
+    --gold: #f59e0b;
+    --amber: #fbbf24;
+    --ink: #f4f4f5;
+    --ink-dim: #a3a3a3;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .info {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 0.75rem 1.25rem;
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(220, 38, 38, 0.35);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    text-align: center;
+  }
+  .info strong { color: var(--amber); font-weight: 700; }
+
+  /* O truque inteiro: todas as seções são IRMÃS, mesmo pai (.stack),
+     todas com a MESMA altura (100vh) e position:sticky top:0. Cada uma
+     fica presa no topo até a próxima (que vem depois no HTML, por isso
+     pinta por cima) alcançar e cobrir. Não precisa de wrapper extra,
+     não precisa de JS — só a ordem do HTML importa. */
+  .stack {
+    position: relative;
+  }
+
+  .painel {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .p1 { background: linear-gradient(160deg, var(--red-mid), var(--red-dark)); }
+  .p2 { background: #050505; }
+  .p3 { background: linear-gradient(160deg, var(--red-dark), #1a0505); }
+  .p4 { background: #000; }
+
+  .conteudo { max-width: 40rem; }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+
+  h1, h2 {
+    text-wrap: balance;
+    margin: 0 0 0.75rem;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    background: linear-gradient(90deg, #ef4444, var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  p.lead {
+    color: var(--ink-dim);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .fim {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #000;
+    position: relative;
+    z-index: 10;
+    border-top: 1px solid rgba(220, 38, 38, 0.25);
+  }
+  .fim p { color: var(--ink-dim); max-width: 30rem; line-height: 1.6; }
+  .fim code {
+    display: block;
+    margin-top: 1rem;
+    text-align: left;
+    background: #111;
+    border: 1px solid #262626;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #d4d4d8;
+    overflow-x: auto;
+    white-space: pre;
+  }
+</style>
+
+<div class="info">
+  Demo isolada — não é parte do site. <strong>Role pra baixo</strong> pra ver cada seção prender e a próxima cobrir.
+</div>
+
+<div class="stack">
+  <section class="painel p1">
+    <div class="conteudo">
+      <span class="eyebrow">Seção 1</span>
+      <h1>Isso é o efeito que você perguntou</h1>
+      <p class="lead">Role pra baixo. Essa seção fica "presa" no topo até a próxima subir e cobrir ela inteira — sem JS, só <code>position: sticky</code>.</p>
+    </div>
+  </section>
+
+  <section class="painel p2">
+    <div class="conteudo">
+      <span class="eyebrow">Seção 2</span>
+      <h2>Ela cobriu a de trás</h2>
+      <p class="lead">A seção 1 continuou "presa" no fundo — essa aqui só subiu e tapou ela, porque vem depois no HTML.</p>
+    </div>
+  </section>
+
+  <section class="painel p3">
+    <div class="conteudo">
+      <span class="eyebrow">Seção 3</span>
+      <h2>Dá pra usar em qualquer seção da home</h2>
+      <p class="lead">Cursos, certificado, empresas — qualquer bloco full-height pode empilhar assim.</p>
+    </div>
+  </section>
+
+  <section class="painel p4">
+    <div class="conteudo">
+      <span class="eyebrow">Seção 4</span>
+      <h2>Última — sem mais nada por cima</h2>
+      <p class="lead">Essa fica parada e visível, porque não tem uma quinta seção pra cobrir ela.</p>
+    </div>
+  </section>
+</div>
+
+<div class="fim">
+  <div>
+    <p>Gostou? É só isso de CSS — sem biblioteca, sem JS. Se quiser aplicar de verdade na home do site, eu adapto pras seções reais (Cursos, Certificado, Empresas...).</p>
+    <code>.stack { position: relative; }  /* pai comum, sem altura fixa */
+.painel { position: sticky; top: 0; height: 100vh; }
+/* todas irmãs, mesma altura — ordem no HTML = ordem de cobrimento */</code>
+  </div>
+</div>

@@ -10,3 +10,6 @@ staticfiles/
 _staticfiles_build/
 *.log
 .DS_Store
+deploy/
+backups/
+_import_supabase.json

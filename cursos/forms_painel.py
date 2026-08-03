@@ -39,7 +39,7 @@ class CursoForm(forms.ModelForm):
         fields = [
             "titulo", "slug", "descricao_curta", "descricao", "preco",
             "carga_horaria", "modalidade",
-            "drive_capa_file_id", "capa_url_externa", "video_youtube_id", "ativo",
+            "drive_capa_file_id", "capa_upload", "capa_url_externa", "video_youtube_id", "ativo",
         ]
         widgets = {"descricao": forms.Textarea(attrs={"rows": 6})}
 

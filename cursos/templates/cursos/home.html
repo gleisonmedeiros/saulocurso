@@ -8,6 +8,8 @@
     <div class="absolute inset-0 bg-gradient-to-t from-red-950 via-red-900/80 to-transparent"></div>
     <div class="absolute inset-0 bg-gradient-to-r from-red-950 via-red-900/60 to-transparent"></div>
 
+    <img src="{% static 'img/logo.jpg' %}" alt="RS Central dos Cursos" class="absolute top-6 left-6 z-10 h-12 md:h-14 w-auto object-contain rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform">
+
     <div class="relative max-w-4xl mx-auto px-4 py-16 text-center">
         <span class="inline-block bg-ember text-white text-xs font-bold tracking-wide uppercase px-4 py-1.5 rounded-full mb-6 shadow-[0_0_15px_rgba(220,38,38,0.5)]">Turmas abertas</span>
         <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 leading-tight text-white drop-shadow-xl">{{ config_site.hero_titulo }}</h1>
@@ -50,7 +52,7 @@
             <div class="grid sm:grid-cols-2 gap-x-6 gap-y-8">
             <div class="text-center">
                 <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
-                <p class="font-semibold text-sm">Certificado com QR Code</p>
+                <p class="font-semibold text-sm">Certificado de conclusão</p>
             </div>
             <div class="text-center">
                 <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
@@ -72,6 +74,11 @@
                 <span class="mx-auto mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-ember shadow-lg shadow-red-600/40"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></span>
                 <p class="font-semibold text-sm">Plataforma exclusiva do aluno</p>
             </div>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+            <div id="selo-ec"></div>
+            <script src="https://e-certificado.com/js/selo_ec193x60.js"></script>
         </div>
     </div>
 </section>

@@ -21,15 +21,10 @@
             emitido em {{ certificado.emitido_em|date:"d/m/Y" }}.
         </p>
 
-        <div class="flex justify-between items-end border-t border-gray-200 pt-6 text-xs text-gray-400">
+        <div class="flex justify-between items-center border-t border-gray-200 pt-6 text-xs text-gray-400">
             <span>RS Central dos Cursos</span>
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <p>Código de verificação: {{ certificado.codigo }}</p>
-                    <p>Escaneie o QR code ao lado pra validar</p>
-                </div>
-                <img src="{% url 'cursos:certificado_qrcode' certificado.codigo %}" alt="QR code de verificação" class="w-16 h-16">
-            </div>
+            <div id="selo-ec"></div>
+            <script src="https://e-certificado.com/js/selo_ec193x60.js"></script>
         </div>
     </div>
 </section>

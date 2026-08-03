@@ -40,23 +40,16 @@
     </style>
 </head>
 {% with ns=request.resolver_match.namespace vn=request.resolver_match.view_name %}
-{% if ns == 'painel' or ns == 'accounts' or ns == 'pagamentos' or vn == 'cursos:minha_area' or vn == 'cursos:conteudo' or vn == 'cursos:assistir_aula' or vn == 'cursos:certificado' or vn == 'cursos:verificar_certificado' %}
+{% if ns == 'painel' or ns == 'accounts' or ns == 'pagamentos' or vn == 'cursos:minha_area' or vn == 'cursos:conteudo' or vn == 'cursos:assistir_aula' or vn == 'cursos:certificado' %}
 <body class="min-h-screen flex flex-col bg-gray-100 text-gray-900" data-area="app">
 {% else %}
 <body class="min-h-screen flex flex-col bg-black text-gray-100" data-area="site">
 {% endif %}
 {% endwith %}
     <div class="h-1 bg-ember print:hidden"></div>
-    <header class="relative bg-black text-gray-200 border-b border-red-900/30 sticky top-0 z-20 print:hidden overflow-visible">
+    <header class="relative bg-black text-gray-200 border-b border-red-900/30 z-20 print:hidden overflow-visible">
         <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between overflow-visible">
-            {% if request.resolver_match.view_name == 'cursos:home' %}
-            <a href="{% url 'cursos:home' %}" class="relative z-30 flex items-center h-full">
-                <img src="{% static 'img/logo.jpg' %}" alt="RS Central dos Cursos" class="h-24 md:h-32 w-auto object-contain rounded-b-xl absolute top-0 left-0 shadow-[0_10px_20px_rgba(220,38,38,0.4)] hover:scale-105 transition-transform origin-top">
-                <div class="w-[19rem] md:w-[25rem]"></div>
-            </a>
-            {% else %}
             <a href="{% url 'cursos:home' %}" class="relative z-30 flex items-center h-full text-lg md:text-2xl font-extrabold text-ember whitespace-nowrap">RS Central dos Cursos</a>
-            {% endif %}
 
             <div class="flex items-center gap-1 md:order-2">
                 <button id="menu-btn" class="md:hidden p-2 text-white" aria-label="abrir menu">
@@ -68,8 +61,7 @@
                 <a href="{% url 'cursos:lista' %}" class="py-2 md:py-0 hover:text-brand-600">Cursos</a>
                 <a href="{% url 'cursos:agenda' %}" class="py-2 md:py-0 hover:text-brand-600">Agenda</a>
                 <a href="{% url 'cursos:empresas' %}" class="py-2 md:py-0 hover:text-brand-600">Empresas</a>
-                <a href="{% url 'cursos:certificado_busca' %}" class="py-2 md:py-0 hover:text-brand-600">Certificados</a>
-
+                <a href="https://e-certificado.com/login" target="_blank" rel="noopener" class="py-2 md:py-0 hover:text-brand-600">Certificados</a>
                 <a href="{% url 'cursos:contato' %}" class="py-2 md:py-0 hover:text-brand-600">Fale conosco</a>
 
                 {% if user.is_authenticated %}
