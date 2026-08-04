@@ -78,6 +78,14 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
 }
 
+# Supabase (e poolers em geral, tipo PgBouncer/Supavisor) não seguram cursor
+# nomeado entre comandos — quebra dumpdata/streams grandes com "cursor ...
+# does not exist" quando a latência é maior (ex: VPS longe do pooler).
+# Desabilita cursor no lado do Django pra qualquer Postgres; sem efeito
+# prático pro tamanho de dado desse projeto.
+if DATABASES['default'].get('ENGINE', '').endswith('postgresql'):
+    DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+
 
 # Password validation
 
@@ -121,3 +129,16 @@ NOTIFICATION_BACKEND = env('NOTIFICATION_BACKEND', default='mock')
 
 # Email de destino do admin pra receber notificação de nova matrícula (mock).
 ADMIN_NOTIFICATION_EMAIL = env('ADMIN_NOTIFICATION_EMAIL', default='admin@saulocurso.local')
+
+# Endurecimento HTTPS — só em produção (DEBUG=False), depois que o certbot já
+# está funcionando. nginx fala com o gunicorn em HTTP puro internamente, então
+# o Django precisa do header abaixo pra saber que a requisição original era
+# HTTPS (senão SECURE_SSL_REDIRECT vira loop infinito de redirecionamento).
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Começa curto (1 semana) — dá pra aumentar depois que confirmar que o
+    # HTTPS está estável. Valor alto de HSTS é difícil de reverter.
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7
