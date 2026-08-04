@@ -2,8 +2,12 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from notificacoes.models import ConfiguracaoNotificacao
+from pagamentos.models import ConfiguracaoPagamento
+
 from .forms_painel import (
-    AulaForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm, ModuloForm, PerguntaFrequenteForm, TurmaForm,
+    AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm,
+    ModuloForm, PerguntaFrequenteForm, TurmaForm,
 )
 from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
@@ -26,6 +30,34 @@ def configuracoes(request):
     else:
         form = ConfiguracaoSiteForm(instance=config)
     return render(request, "painel/configuracoes_form.html", {"form": form})
+
+
+@staff_member_required
+def pagamento_config(request):
+    config = ConfiguracaoPagamento.obter()
+    if request.method == "POST":
+        form = ConfiguracaoPagamentoForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Configuração de pagamento atualizada.")
+            return redirect("painel:dashboard")
+    else:
+        form = ConfiguracaoPagamentoForm(instance=config)
+    return render(request, "painel/pagamento_form.html", {"form": form})
+
+
+@staff_member_required
+def notificacoes_config(request):
+    config = ConfiguracaoNotificacao.obter()
+    if request.method == "POST":
+        form = ConfiguracaoNotificacaoForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Configuração de notificações atualizada.")
+            return redirect("painel:dashboard")
+    else:
+        form = ConfiguracaoNotificacaoForm(instance=config)
+    return render(request, "painel/notificacoes_form.html", {"form": form})
 
 
 # --- Curso -----------------------------------------------------------------

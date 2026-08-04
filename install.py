@@ -155,7 +155,7 @@ def ler_env() -> dict[str, str]:
 def escrever_env(dados: dict[str, str]) -> None:
     ordem = [
         "SECRET_KEY", "DEBUG", "ALLOWED_HOSTS", "CSRF_TRUSTED_ORIGINS",
-        "DATABASE_URL", "PAYMENT_GATEWAY", "NOTIFICATION_BACKEND",
+        "DATABASE_URL",
         "ADMIN_NOTIFICATION_EMAIL",
         # Não lida pelo Django/settings.py — só usada pelo comando
         # "importar-supabase" deste script, como origem dos dados.
@@ -332,8 +332,6 @@ def cmd_setup(args: argparse.Namespace) -> None:
         aviso("DATABASE_URL ausente. O Django vai cair pra SQLite.")
         aviso("Pra Postgres: rode 'python3 install.py banco' ou passe --database-url.")
 
-    dados.setdefault("PAYMENT_GATEWAY", "mock")
-    dados.setdefault("NOTIFICATION_BACKEND", "mock")
     dados.setdefault("ADMIN_NOTIFICATION_EMAIL", "admin@localhost")
     escrever_env(dados)
     ok(f".env {'criado' if criado_agora else 'atualizado'} ({ENV_FILE})")

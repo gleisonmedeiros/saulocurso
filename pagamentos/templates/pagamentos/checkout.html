@@ -15,6 +15,22 @@
 
             {% if user.is_authenticated %}
                 <p class="text-sm text-gray-500">Comprando como <strong>{{ user.email|default:user.username }}</strong>.</p>
+            {% elif cadastro_form %}
+                <p class="text-sm text-gray-500 mb-2">
+                    Preenche seus dados — assim que o pagamento for confirmado, a gente já manda seu login e senha por email.
+                </p>
+                {% for field in cadastro_form %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <p class="text-xs text-gray-400">
+                    Já tem conta? <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="text-brand-600 hover:underline">Faça login</a> antes de continuar.
+                </p>
             {% else %}
                 <p class="text-sm text-gray-500">
                     Depois do pagamento aprovado você completa seu cadastro (nome, CPF, telefone e email) e recebe a senha de acesso por email.
@@ -24,25 +40,17 @@
                 </p>
             {% endif %}
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Forma de pagamento</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="metodo-opcao cursor-pointer border-2 border-brand-600 bg-brand-50 rounded-lg px-4 py-3 text-center font-semibold text-brand-700">
-                        <input type="radio" name="metodo" value="pix" checked class="sr-only">
-                        Pix
-                    </label>
-                    <label class="metodo-opcao cursor-pointer border-2 border-gray-200 rounded-lg px-4 py-3 text-center font-semibold text-gray-600">
-                        <input type="radio" name="metodo" value="cartao" class="sr-only">
-                        Cartão de crédito
-                    </label>
-                </div>
-            </div>
-
-            <p class="text-xs text-gray-400">
-                Pagamento em modo de demonstração — clique em "Pagar" pra simular a aprovação instantânea.
-            </p>
+            {% if payment_gateway == "infinitepay" %}
+                <p class="text-xs text-gray-400">
+                    Você vai ser redirecionado pro InfinitePay pra concluir o pagamento com segurança (Pix ou cartão, você escolhe lá).
+                </p>
+            {% else %}
+                <p class="text-xs text-gray-400">
+                    Pagamento em modo de demonstração — clique em "Pagar" pra simular a aprovação instantânea.
+                </p>
+            {% endif %}
             <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">
-                Pagar agora
+                {% if payment_gateway == "infinitepay" %}Ir para pagamento InfinitePay{% else %}Pagar agora{% endif %}
             </button>
         </form>
     </div>
@@ -51,15 +59,17 @@
 
 {% block extra_js %}
 <script>
-    document.querySelectorAll('.metodo-opcao').forEach(label => {
-        label.addEventListener('click', () => {
-            document.querySelectorAll('.metodo-opcao').forEach(l => {
-                l.classList.remove('border-brand-600', 'bg-brand-50', 'text-brand-700');
-                l.classList.add('border-gray-200', 'text-gray-600');
-            });
-            label.classList.remove('border-gray-200', 'text-gray-600');
-            label.classList.add('border-brand-600', 'bg-brand-50', 'text-brand-700');
+    const cpfInput = document.getElementById('id_cpf');
+    if (cpfInput) {
+        cpfInput.setAttribute('maxlength', '14');
+        cpfInput.setAttribute('placeholder', '000.000.000-00');
+        cpfInput.addEventListener('input', () => {
+            let v = cpfInput.value.replace(/\D/g, '').slice(0, 11);
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d)/, '$1.$2');
+            v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            cpfInput.value = v;
         });
-    });
+    }
 </script>
 {% endblock %}

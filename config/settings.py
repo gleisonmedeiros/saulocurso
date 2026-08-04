@@ -120,14 +120,15 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'cursos:minha_area'
 LOGOUT_REDIRECT_URL = 'cursos:home'
 
-# Gateway de pagamento: 'mock' por enquanto. Trocar por 'mercadopago'/'stripe'
-# quando integrar de verdade — a factory em pagamentos/services.py lê essa flag.
-PAYMENT_GATEWAY = env('PAYMENT_GATEWAY', default='mock')
+# Gateway de pagamento (mock ou InfinitePay) e o InfiniteTag ficam na
+# pagamentos.ConfiguracaoPagamento, editável em /painel/pagamento/ — não
+# precisa de env var/redeploy pra trocar.
 
-# Notificações (email/whatsapp): 'mock' por enquanto, só loga em NotificacaoLog.
-NOTIFICATION_BACKEND = env('NOTIFICATION_BACKEND', default='mock')
+# Backend de notificação (mock ou SMTP real) e credenciais de email ficam na
+# notificacoes.ConfiguracaoNotificacao, editável em /painel/notificacoes/ —
+# não precisa de env var/redeploy pra trocar.
 
-# Email de destino do admin pra receber notificação de nova matrícula (mock).
+# Email de destino do admin pra receber notificação de nova matrícula.
 ADMIN_NOTIFICATION_EMAIL = env('ADMIN_NOTIFICATION_EMAIL', default='admin@saulocurso.local')
 
 # Endurecimento HTTPS — só em produção (DEBUG=False), depois que o certbot já

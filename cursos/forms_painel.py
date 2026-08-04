@@ -2,6 +2,9 @@ import re
 
 from django import forms
 
+from notificacoes.models import ConfiguracaoNotificacao
+from pagamentos.models import ConfiguracaoPagamento
+
 from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 INPUT_CLASS = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
@@ -120,6 +123,49 @@ class ConfiguracaoSiteForm(forms.ModelForm):
     def clean_hero_video_drive_file_id(self):
         valor = self.cleaned_data.get("hero_video_drive_file_id", "")
         return extrair_drive_id(valor) if valor else valor
+
+
+class ConfiguracaoPagamentoForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoPagamento
+        fields = ["gateway", "infinitepay_handle"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["infinitepay_handle"].widget.attrs["placeholder"] = "gleison-pereira-z9a"
+        _aplicar_classes(self)
+
+    def clean_infinitepay_handle(self):
+        valor = self.cleaned_data.get("infinitepay_handle", "").strip().lstrip("$")
+        return valor
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("gateway") == ConfiguracaoPagamento.Gateway.INFINITEPAY and not cleaned.get("infinitepay_handle"):
+            self.add_error("infinitepay_handle", "Preenche o InfiniteTag pra usar o InfinitePay.")
+        return cleaned
+
+
+class ConfiguracaoNotificacaoForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoNotificacao
+        fields = ["backend", "email_host", "email_port", "email_use_tls", "email_host_user", "email_host_password"]
+        widgets = {
+            "email_host_password": forms.PasswordInput(render_value=True),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _aplicar_classes(self)
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("backend") == ConfiguracaoNotificacao.Backend.SMTP:
+            if not cleaned.get("email_host_user"):
+                self.add_error("email_host_user", "Preenche o email remetente pra usar SMTP real.")
+            if not cleaned.get("email_host_password"):
+                self.add_error("email_host_password", "Preenche a senha de app pra usar SMTP real.")
+        return cleaned
 
 
 class MentoriaForm(forms.ModelForm):

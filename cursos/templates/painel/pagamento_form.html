@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Configuração de pagamento — Painel{% endblock %}
+
+{% block content %}
+<section class="max-w-2xl mx-auto px-4 py-10">
+    <a href="{% url 'painel:dashboard' %}" class="text-sm text-brand-600 hover:underline">&larr; Painel</a>
+    <h1 class="text-2xl font-bold mt-2 mb-1">Configuração de pagamento</h1>
+    <p class="text-gray-500 text-sm mb-6">
+        Escolhe entre modo teste (pagamento de enfeite, aprova tudo na hora — bom pra demonstração) ou
+        InfinitePay (pagamento de verdade).
+    </p>
+
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.gateway.label }}</label>
+            {{ form.gateway }}
+            {% for error in form.gateway.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <div id="campo-handle">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.infinitepay_handle.label }}</label>
+            {{ form.infinitepay_handle }}
+            {% if form.infinitepay_handle.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.infinitepay_handle.help_text }}</p>{% endif %}
+            {% for error in form.infinitepay_handle.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Salvar</button>
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const gatewaySelect = document.getElementById('id_gateway');
+    const campoHandle = document.getElementById('campo-handle');
+
+    function atualizarVisibilidade() {
+        campoHandle.style.display = gatewaySelect.value === 'infinitepay' ? 'block' : 'none';
+    }
+
+    if (gatewaySelect && campoHandle) {
+        atualizarVisibilidade();
+        gatewaySelect.addEventListener('change', atualizarVisibilidade);
+    }
+</script>
+{% endblock %}

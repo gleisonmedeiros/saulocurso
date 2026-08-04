@@ -1,8 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 
 from django.conf import settings
+from django.core.mail import get_connection, send_mail
 
-from .models import NotificacaoLog
+from .models import ConfiguracaoNotificacao, NotificacaoLog
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationBackend(ABC):
@@ -27,15 +31,44 @@ class MockNotificationBackend(NotificationBackend):
         NotificacaoLog.objects.create(canal="whatsapp", destinatario=destinatario, mensagem=mensagem)
 
 
-_BACKENDS = {
-    "mock": MockNotificationBackend,
-}
+class SMTPNotificationBackend(NotificationBackend):
+    """Email de verdade via SMTP (Gmail/Google Workspace) — credenciais vêm
+    do ConfiguracaoNotificacao (painel), não do .env. WhatsApp continua
+    mock — de verdade precisaria de uma API paga tipo Z-API/WhatsApp Business,
+    fora de escopo por enquanto."""
+
+    def __init__(self, config):
+        self.config = config
+
+    def enviar_email(self, destinatario, assunto, mensagem):
+        conexao = get_connection(
+            backend="django.core.mail.backends.smtp.EmailBackend",
+            host=self.config.email_host,
+            port=self.config.email_port,
+            username=self.config.email_host_user,
+            password=self.config.email_host_password,
+            use_tls=self.config.email_use_tls,
+        )
+        try:
+            send_mail(
+                assunto, mensagem, self.config.email_host_user, [destinatario],
+                connection=conexao, fail_silently=False,
+            )
+        except Exception:
+            logger.exception("Falha ao enviar email pra %s (%s)", destinatario, assunto)
+            raise
+        NotificacaoLog.objects.create(canal="email", destinatario=destinatario, assunto=assunto, mensagem=mensagem)
+
+    def enviar_whatsapp(self, destinatario, mensagem):
+        print(f"[MOCK WHATSAPP] Para {destinatario}: {mensagem}")
+        NotificacaoLog.objects.create(canal="whatsapp", destinatario=destinatario, mensagem=mensagem)
 
 
 def get_notification_backend() -> NotificationBackend:
-    nome = getattr(settings, "NOTIFICATION_BACKEND", "mock")
-    backend_cls = _BACKENDS.get(nome, MockNotificationBackend)
-    return backend_cls()
+    config = ConfiguracaoNotificacao.obter()
+    if config.backend == ConfiguracaoNotificacao.Backend.SMTP:
+        return SMTPNotificationBackend(config)
+    return MockNotificationBackend()
 
 
 class NotificationService:

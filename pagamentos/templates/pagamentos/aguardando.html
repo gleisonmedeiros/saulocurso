@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Confirmando pagamento — {{ curso.titulo }}{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16 text-center">
+    <div class="flex justify-center mb-4">
+        <span class="inline-flex items-center gap-2 bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider px-4 py-1.5 rounded-full">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            Aguardando confirmação
+        </span>
+    </div>
+    <h1 class="text-2xl font-bold mb-2 text-gray-900">Confirmando seu pagamento</h1>
+    <p class="text-gray-500 mb-8">
+        Assim que o InfinitePay confirmar o pagamento do curso
+        <strong class="text-gray-900">{{ curso.titulo }}</strong>, essa página avança sozinha.
+        Normalmente leva só alguns segundos.
+    </p>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <p class="text-sm text-gray-500 mb-4">
+            Verificando de novo em <span id="contador" class="font-semibold text-gray-700">5</span>s...
+        </p>
+        <a href="{{ request.path }}?ref={{ order_nsu }}" class="inline-block bg-brand-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-brand-700">
+            Verificar agora
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let segundos = 5;
+    const contador = document.getElementById('contador');
+    setInterval(() => {
+        segundos -= 1;
+        if (segundos <= 0) {
+            window.location.reload();
+            return;
+        }
+        contador.textContent = segundos;
+    }, 1000);
+</script>
+{% endblock %}

@@ -7,6 +7,8 @@ app_name = "painel"
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("configuracoes/", views.configuracoes, name="configuracoes"),
+    path("pagamento/", views.pagamento_config, name="pagamento_config"),
+    path("notificacoes/", views.notificacoes_config, name="notificacoes_config"),
 
     path("cursos/novo/", views.curso_novo, name="curso_novo"),
     path("cursos/<int:pk>/", views.curso_detalhe, name="curso_detalhe"),

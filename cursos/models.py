@@ -32,11 +32,12 @@ class Curso(models.Model):
         help_text="Envia o arquivo direto do computador. Se preencher o ID do Drive também, o Drive "
         "tem prioridade sobre esse upload.",
     )
-    capa_url_externa = models.URLField(
+    capa_url_externa = models.CharField(
         "URL da capa (link direto)",
+        max_length=500,
         blank=True,
-        help_text="Última opção — cola o link direto da imagem (ex: termina em .jpg/.png). Só é usada "
-        "se não tiver Drive nem upload preenchido.",
+        help_text="Última opção — cola o link direto da imagem (https://... ou um caminho relativo tipo "
+        "/static/img/arquivo.jpg). Só é usada se não tiver Drive nem upload preenchido.",
     )
     video_youtube_id = models.CharField("ID do vídeo de apresentação (YouTube)", max_length=200, blank=True)
     ativo = models.BooleanField(default=True)
