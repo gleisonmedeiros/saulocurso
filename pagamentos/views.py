@@ -16,6 +16,7 @@ from django.views.decorators.http import require_POST
 from accounts.models import Perfil
 from cursos.models import Curso
 from matriculas.models import Matricula
+from notificacoes.models import ConfiguracaoNotificacao
 from notificacoes.services import NotificationService
 
 from .forms import CadastroAlunoForm
@@ -296,8 +297,15 @@ def cadastro_pos_pagamento(request):
             del request.session[SESSION_KEY_CURSO_PENDENTE]
             request.session.pop(SESSION_KEY_METODO_PENDENTE, None)
             login(request, aluno)
-            request.session["credenciais_demo"] = {"login": aluno.username, "senha": senha_temporaria}
-            messages.success(request, "Cadastro concluído! Enviamos sua senha temporária por email.")
+
+            # No modo mock nada é enviado de verdade, então mostramos a senha
+            # temporária na própria tela. Com SMTP real, a senha vai só no email.
+            modo_mock = ConfiguracaoNotificacao.obter().backend == ConfiguracaoNotificacao.Backend.MOCK
+            if modo_mock:
+                request.session["credenciais_demo"] = {"login": aluno.username, "senha": senha_temporaria}
+                messages.success(request, "Cadastro concluído! Sua senha temporária está na tela abaixo.")
+            else:
+                messages.success(request, "Cadastro concluído! Enviamos sua senha temporária por email.")
             return redirect("accounts:trocar_senha")
     else:
         form = CadastroAlunoForm()

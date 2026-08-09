@@ -1,8 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
 
-from django.conf import settings
 from django.core.mail import get_connection, send_mail
+from django.urls import reverse
 
 from .models import ConfiguracaoNotificacao, NotificacaoLog
 
@@ -73,26 +73,67 @@ def get_notification_backend() -> NotificationBackend:
 
 class NotificationService:
     def __init__(self):
+        self.config = ConfiguracaoNotificacao.obter()
         self.backend = get_notification_backend()
 
     def notificar_matricula(self, aluno, curso):
         assunto = f"Inscrição confirmada — {curso.titulo}"
         mensagem_aluno = f"Olá {aluno.get_full_name() or aluno.get_username()}, sua inscrição no curso '{curso.titulo}' foi confirmada!"
-        mensagem_admin = f"Nova matrícula: {aluno.get_username()} se inscreveu em '{curso.titulo}'."
+
+        perfil = getattr(aluno, "perfil", None)
+        telefone = getattr(perfil, "telefone", "") or "-"
+        nome = aluno.get_full_name() or aluno.get_username()
+        preco = getattr(curso, "preco", None)
+        valor = f"R$ {preco:.2f}".replace(".", ",") if preco is not None else "-"
+        assunto_admin = f"Nova matrícula — {curso.titulo}"
+        mensagem_admin = (
+            "Uma nova matrícula foi registrada na plataforma.\n\n"
+            "── Aluno ──\n"
+            f"Nome: {nome}\n"
+            f"Email: {aluno.email or '-'}\n"
+            f"Telefone: {telefone}\n"
+            f"Usuário: {aluno.get_username()}\n\n"
+            "── Curso ──\n"
+            f"Título: {curso.titulo}\n"
+            f"Valor: {valor}\n\n"
+            "Acesse o painel para mais detalhes."
+        )
 
         self.backend.enviar_email(aluno.email or aluno.get_username(), assunto, mensagem_aluno)
-        telefone = getattr(getattr(aluno, "perfil", None), "telefone", "") or aluno.get_username()
-        self.backend.enviar_whatsapp(telefone, mensagem_aluno)
+        self.backend.enviar_whatsapp(telefone if telefone != "-" else aluno.get_username(), mensagem_aluno)
 
-        self.backend.enviar_email(settings.ADMIN_NOTIFICATION_EMAIL, assunto, mensagem_admin)
+        self.backend.enviar_email(self.config.email_destino_admin(), assunto_admin, mensagem_admin)
 
     def notificar_credenciais(self, aluno, senha_temporaria):
-        assunto = "Seu acesso à plataforma RS Central dos Cursos"
+        assunto = "Seu acesso ao Portal do Aluno — RS Central dos Cursos"
+        base = (self.config.site_url or "").rstrip("/")
+        portal_url = f"{base}{reverse('accounts:login')}"
+        nome = aluno.get_full_name() or aluno.get_username()
         mensagem = (
-            f"Olá {aluno.get_full_name() or aluno.get_username()}, seu cadastro foi concluído.\n\n"
-            f"Login: {aluno.username}\n"
+            f"Olá {nome}, seu cadastro foi concluído com sucesso!\n\n"
+            "Já pode acessar o Portal do Aluno e começar seus estudos.\n\n"
+            "── Seus dados de acesso ──\n"
+            f"Portal do Aluno: {portal_url}\n"
+            f"Usuário (login): {aluno.get_username()}\n"
             f"Senha temporária: {senha_temporaria}\n\n"
-            f"No primeiro acesso você vai precisar trocar essa senha."
+            "Por segurança, no primeiro acesso o sistema vai pedir para você "
+            "trocar essa senha temporária por uma senha pessoal.\n\n"
+            "Bons estudos!\n"
+            "Equipe RS Central dos Cursos"
+        )
+        self.backend.enviar_email(aluno.email, assunto, mensagem)
+
+    def notificar_codigo_recuperacao(self, aluno, codigo):
+        assunto = "Código para redefinir sua senha — RS Central dos Cursos"
+        nome = aluno.get_full_name() or aluno.get_username()
+        mensagem = (
+            f"Olá {nome},\n\n"
+            "Recebemos um pedido para redefinir a senha da sua conta.\n\n"
+            f"Seu código de verificação é: {codigo}\n\n"
+            "Ele expira em 15 minutos. Digite esse código na tela de recuperação "
+            "para criar uma nova senha.\n\n"
+            "Se você não pediu isso, ignore este email — sua senha continua a mesma.\n\n"
+            "Equipe RS Central dos Cursos"
         )
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
@@ -106,4 +147,4 @@ class NotificationService:
             f"Telefone: {contato_mensagem.telefone or '-'}\n\n"
             f"{contato_mensagem.mensagem}"
         )
-        self.backend.enviar_email(settings.ADMIN_NOTIFICATION_EMAIL, assunto, mensagem)
+        self.backend.enviar_email(self.config.email_destino_admin(), assunto, mensagem)

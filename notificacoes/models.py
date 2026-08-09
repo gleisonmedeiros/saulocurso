@@ -11,6 +11,11 @@ class ConfiguracaoNotificacao(models.Model):
         SMTP = "smtp", "Email real (SMTP — Gmail/Google Workspace)"
 
     backend = models.CharField(max_length=20, choices=Backend.choices, default=Backend.MOCK)
+    site_url = models.URLField(
+        "URL do site (Portal do Aluno)", default="https://rscentraldoscursos.com.br",
+        help_text="Endereço base usado nos links dos emails enviados ao aluno. "
+        "Ex.: https://rscentraldoscursos.com.br (sem barra no fim).",
+    )
     email_host = models.CharField("servidor SMTP", max_length=255, blank=True, default="smtp.gmail.com")
     email_port = models.PositiveIntegerField("porta SMTP", default=587)
     email_use_tls = models.BooleanField("usar TLS", default=True)
@@ -35,6 +40,12 @@ class ConfiguracaoNotificacao(models.Model):
     def obter(cls):
         config, _ = cls.objects.get_or_create(pk=1)
         return config
+
+    def email_destino_admin(self):
+        """Pra onde vão os avisos de matrícula/contato: o email remetente
+        configurado no painel; se vazio, o default do settings."""
+        from django.conf import settings
+        return self.email_host_user or settings.ADMIN_NOTIFICATION_EMAIL
 
 
 class NotificacaoLog(models.Model):

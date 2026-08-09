@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Nova senha — RS Central dos Cursos{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16">
+    <h1 class="text-2xl font-bold mb-2 text-center">Criar nova senha</h1>
+    <p class="text-gray-500 text-sm text-center mb-6">
+        Digite a nova senha nos dois campos abaixo.
+    </p>
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text|safe }}</p>{% endif %}
+                {% for error in field.errors %}<p class="text-red-600 text-xs mt-1">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}<p class="text-red-600 text-sm">{{ form.non_field_errors }}</p>{% endif %}
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Salvar nova senha</button>
+    </form>
+</section>
+{% endblock %}

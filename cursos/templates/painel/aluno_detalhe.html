@@ -1,0 +1,155 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}{{ aluno.get_full_name|default:aluno.username }} — Aluno{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-4xl mx-auto px-4 py-10 space-y-8">
+    <div>
+        <a href="{% url 'painel:alunos_lista' %}" class="text-sm text-brand-600 hover:underline">&larr; Alunos</a>
+        <div class="flex items-center gap-3 mt-2">
+            <h1 class="text-2xl font-bold text-brand-700">{{ aluno.get_full_name|default:aluno.username }}</h1>
+            {% if aluno.is_active %}
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">ativo</span>
+            {% else %}
+                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">inativo</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Dados / contato #}
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-gray-900 mb-4">Dados de contato</h2>
+        <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+            <div><dt class="text-gray-500">Email / login</dt><dd class="text-gray-900">{{ aluno.email|default:aluno.username }}</dd></div>
+            <div><dt class="text-gray-500">Telefone (WhatsApp)</dt><dd class="text-gray-900">{{ perfil.telefone|default:"—" }}</dd></div>
+            <div><dt class="text-gray-500">CPF</dt><dd class="text-gray-900">{{ perfil.cpf|default:"—" }}</dd></div>
+            <div><dt class="text-gray-500">Cadastro</dt><dd class="text-gray-900">{{ aluno.date_joined|date:"d/m/Y H:i" }}</dd></div>
+            <div><dt class="text-gray-500">Último acesso</dt><dd class="text-gray-900">{{ aluno.last_login|date:"d/m/Y H:i"|default:"nunca" }}</dd></div>
+            <div><dt class="text-gray-500">Precisa trocar senha</dt><dd class="text-gray-900">{% if perfil.deve_trocar_senha %}sim{% else %}não{% endif %}</dd></div>
+        </dl>
+    </div>
+
+    {# Cursos + progresso #}
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-gray-900 mb-4">Cursos matriculados ({{ cursos_info|length }})</h2>
+        {% if cursos_info %}
+            <div class="space-y-4">
+                {% for info in cursos_info %}
+                    <div class="border border-gray-100 rounded-lg p-4">
+                        <div class="flex items-center justify-between gap-3 mb-2">
+                            <span class="font-medium text-gray-900">{{ info.curso.titulo }}</span>
+                            <span class="text-xs text-gray-500">
+                                {% if info.matricula.ativo %}<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">ativo</span>
+                                {% else %}<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">inativo</span>{% endif %}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2.5">
+                            <div class="bg-brand-600 h-2.5 rounded-full" style="width: {{ info.progresso.percentual }}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ info.progresso.concluidas }}/{{ info.progresso.total }} aulas — {{ info.progresso.percentual }}%
+                            {% if info.progresso.completo %}<span class="text-green-600 font-medium">· concluído</span>{% endif %}
+                            · matrícula em {{ info.matricula.data_matricula|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-400 text-sm">Sem matrículas.</p>
+        {% endif %}
+    </div>
+
+    {# Aulas assistidas #}
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-gray-900 mb-4">Aulas assistidas ({{ total_aulas_concluidas }})</h2>
+        {% if aulas_concluidas %}
+            <ul class="divide-y divide-gray-100 text-sm">
+                {% for ac in aulas_concluidas %}
+                    <li class="py-2 flex items-center justify-between gap-3">
+                        <span class="text-gray-900">{{ ac.aula.titulo }}
+                            <span class="text-gray-400">· {{ ac.aula.modulo.curso.titulo }}</span>
+                        </span>
+                        <span class="text-gray-500 whitespace-nowrap">{{ ac.concluida_em|date:"d/m/Y H:i" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if total_aulas_concluidas > 50 %}<p class="text-xs text-gray-400 mt-3">Mostrando as 50 mais recentes.</p>{% endif %}
+        {% else %}
+            <p class="text-gray-400 text-sm">Nenhuma aula concluída ainda.</p>
+        {% endif %}
+    </div>
+
+    {# Pagamentos #}
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-gray-900 mb-4">Pagamentos</h2>
+        {% if pagamentos %}
+            <table class="w-full text-sm">
+                <thead class="text-gray-500 text-left">
+                    <tr><th class="py-2 font-medium">Curso</th><th class="py-2 font-medium">Valor</th><th class="py-2 font-medium">Status</th><th class="py-2 font-medium">Método</th><th class="py-2 font-medium">Data</th></tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for p in pagamentos %}
+                        <tr>
+                            <td class="py-2 text-gray-900">{{ p.curso.titulo }}</td>
+                            <td class="py-2 text-gray-500">R$ {{ p.valor }}</td>
+                            <td class="py-2 text-gray-500">{{ p.status }}</td>
+                            <td class="py-2 text-gray-500">{{ p.metodo }}</td>
+                            <td class="py-2 text-gray-500">{{ p.criado_em|date:"d/m/Y" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-gray-400 text-sm">Sem pagamentos registrados.</p>
+        {% endif %}
+    </div>
+
+    {# Certificados #}
+    {% if certificados %}
+    <div class="bg-white border border-gray-200 rounded-xl p-6">
+        <h2 class="font-semibold text-gray-900 mb-4">Certificados</h2>
+        <ul class="text-sm space-y-1">
+            {% for c in certificados %}
+                <li class="text-gray-900">{{ c.curso.titulo }} <span class="text-gray-400">· {{ c.emitido_em|date:"d/m/Y" }} · {{ c.codigo }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {# Ações de conta #}
+    <div class="bg-white border border-red-200 rounded-xl p-6 space-y-6">
+        <div>
+            <h2 class="font-semibold text-gray-900 mb-1">Resetar senha</h2>
+            <p class="text-gray-500 text-sm mb-4">
+                Gera uma senha temporária nova, marca o aluno para trocá-la no próximo acesso e
+                envia por email (se o envio real estiver configurado).
+            </p>
+            <form method="post" action="{% url 'painel:aluno_resetar_senha' aluno.pk %}"
+                  onsubmit="return confirm('Resetar a senha de {{ aluno.get_full_name|default:aluno.username|escapejs }}? A senha atual deixará de funcionar.');">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-red-700">Resetar senha do aluno</button>
+            </form>
+        </div>
+
+        <div class="border-t border-gray-100 pt-6">
+            <h2 class="font-semibold text-gray-900 mb-1">{% if aluno.is_active %}Inativar acesso{% else %}Reativar acesso{% endif %}</h2>
+            <p class="text-gray-500 text-sm mb-4">
+                {% if aluno.is_active %}
+                    Bloqueia o login do aluno. Os dados, matrículas e histórico são preservados —
+                    dá pra reativar depois.
+                {% else %}
+                    Este aluno está inativo e não consegue fazer login. Reative para liberar o acesso.
+                {% endif %}
+            </p>
+            <form method="post" action="{% url 'painel:aluno_toggle_ativo' aluno.pk %}"
+                  onsubmit="return confirm('{% if aluno.is_active %}Inativar{% else %}Reativar{% endif %} {{ aluno.get_full_name|default:aluno.username|escapejs }}?');">
+                {% csrf_token %}
+                {% if aluno.is_active %}
+                    <button type="submit" class="bg-red-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-red-700">Inativar aluno</button>
+                {% else %}
+                    <button type="submit" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700">Reativar aluno</button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

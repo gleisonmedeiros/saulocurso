@@ -1,0 +1,61 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}Alunos — Painel{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-5xl mx-auto px-4 py-10">
+    <a href="{% url 'painel:dashboard' %}" class="text-sm text-brand-600 hover:underline">&larr; Painel</a>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-brand-700">Alunos</h1>
+            <p class="text-gray-500 text-sm">{{ alunos|length }} aluno(s) cadastrado(s).</p>
+        </div>
+        <form method="get" class="flex gap-2">
+            <input type="text" name="q" value="{{ q }}" placeholder="Nome, email, telefone, CPF…"
+                   class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64">
+            <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700 text-sm">Buscar</button>
+            {% if q %}<a href="{% url 'painel:alunos_lista' %}" class="px-4 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50">Limpar</a>{% endif %}
+        </form>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-500 text-left">
+                <tr>
+                    <th class="px-5 py-3 font-medium">Nome</th>
+                    <th class="px-5 py-3 font-medium">Email</th>
+                    <th class="px-5 py-3 font-medium">Telefone</th>
+                    <th class="px-5 py-3 font-medium">Cursos</th>
+                    <th class="px-5 py-3 font-medium">Status</th>
+                    <th class="px-5 py-3 font-medium">Cadastro</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for aluno in alunos %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3 font-medium text-gray-900">{{ aluno.get_full_name|default:aluno.username }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ aluno.email|default:"—" }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ aluno.perfil.telefone|default:"—" }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ aluno.total_matriculas }}</td>
+                        <td class="px-5 py-3">
+                            {% if aluno.is_active %}
+                                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">ativo</span>
+                            {% else %}
+                                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3 text-gray-500">{{ aluno.date_joined|date:"d/m/Y" }}</td>
+                        <td class="px-5 py-3 text-right">
+                            <a href="{% url 'painel:aluno_detalhe' aluno.pk %}" class="text-brand-600 hover:underline font-medium">Ver →</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400">
+                        {% if q %}Nenhum aluno encontrado para “{{ q }}”.{% else %}Nenhum aluno cadastrado ainda.{% endif %}
+                    </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

@@ -1,20 +1,14 @@
-{% extends "base.html" %}
+{% extends "painel/base_painel.html" %}
 {% block title %}Painel — RS Central dos Cursos{% endblock %}
 
-{% block content %}
+{% block painel_content %}
 <section class="max-w-5xl mx-auto px-4 py-10">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-brand-700">Painel de conteúdo</h1>
             <p class="text-gray-500 text-sm">Cadastre e edite cursos, módulos, aulas e mentorias.</p>
         </div>
-        <div class="flex flex-wrap gap-3">
-            <a href="{% url 'painel:faq_lista' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Perguntas frequentes</a>
-            <a href="{% url 'painel:pagamento_config' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Pagamento</a>
-            <a href="{% url 'painel:notificacoes_config' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Notificações</a>
-            <a href="{% url 'painel:configuracoes' %}" class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Configurações do site</a>
-            <a href="{% url 'painel:curso_novo' %}" class="bg-brand-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-brand-700">+ Novo curso</a>
-        </div>
+        <a href="{% url 'painel:curso_novo' %}" class="bg-brand-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-brand-700 self-start">+ Novo curso</a>
     </div>
 
     <div class="bg-white border border-gray-200 rounded-xl overflow-x-auto">

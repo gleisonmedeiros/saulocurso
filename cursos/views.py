@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -11,6 +13,8 @@ from notificacoes.services import NotificationService
 
 from .forms import ContatoForm
 from .models import ContatoMensagem, Curso, PerguntaFrequente, Turma
+
+logger = logging.getLogger(__name__)
 
 
 def home(request):
@@ -34,7 +38,10 @@ def contato(request):
                 telefone=form.cleaned_data["telefone"],
                 mensagem=form.cleaned_data["mensagem"],
             )
-            NotificationService().notificar_contato(contato_mensagem)
+            try:
+                NotificationService().notificar_contato(contato_mensagem)
+            except Exception:
+                logger.exception("Falha ao notificar contato %s", contato_mensagem.pk)
             messages.success(request, "Mensagem enviada! Vamos retornar em breve.")
             return redirect("cursos:contato")
     else:
@@ -53,7 +60,10 @@ def empresas(request):
                 telefone=form.cleaned_data["telefone"],
                 mensagem=form.cleaned_data["mensagem"],
             )
-            NotificationService().notificar_contato(contato_mensagem)
+            try:
+                NotificationService().notificar_contato(contato_mensagem)
+            except Exception:
+                logger.exception("Falha ao notificar contato empresa %s", contato_mensagem.pk)
             messages.success(request, "Pedido de orçamento enviado! Vamos retornar em breve.")
             return redirect("cursos:empresas")
     else:

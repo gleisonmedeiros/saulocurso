@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Esqueci a senha — RS Central dos Cursos{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto px-4 py-16">
+    <h1 class="text-2xl font-bold mb-2 text-center">Esqueci a senha</h1>
+    <p class="text-gray-500 text-sm text-center mb-6">
+        Informe seu email. Enviaremos um código de verificação para você criar uma nova senha.
+    </p>
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="text-red-600 text-xs mt-1">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Enviar código</button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-4">
+        <a href="{% url 'accounts:login' %}" class="text-brand-600 hover:underline">Voltar ao login</a>
+    </p>
+</section>
+{% endblock %}

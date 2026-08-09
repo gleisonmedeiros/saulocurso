@@ -1,15 +1,25 @@
+import secrets
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
+from matriculas.models import Certificado
+from matriculas.progresso import calcular_progresso
 from notificacoes.models import ConfiguracaoNotificacao
-from pagamentos.models import ConfiguracaoPagamento
+from notificacoes.services import NotificationService
+from pagamentos.models import ConfiguracaoPagamento, Pagamento
 
 from .forms_painel import (
     AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm,
     ModuloForm, PerguntaFrequenteForm, TurmaForm,
 )
-from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+from .models import Aula, ConfiguracaoSite, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+
+User = get_user_model()
 
 
 @staff_member_required
@@ -283,6 +293,112 @@ def turma_excluir(request, pk):
 
 
 # --- Pergunta frequente (FAQ) ----------------------------------------------
+
+# --- Alunos ------------------------------------------------------------------
+
+@staff_member_required
+def alunos_lista(request):
+    q = (request.GET.get("q") or "").strip()
+    alunos = (
+        User.objects.filter(is_staff=False)
+        .select_related("perfil")
+        .annotate(total_matriculas=Count("matriculas", distinct=True))
+        .order_by("-date_joined")
+    )
+    if q:
+        alunos = alunos.filter(
+            Q(first_name__icontains=q) | Q(last_name__icontains=q)
+            | Q(username__icontains=q) | Q(email__icontains=q)
+            | Q(perfil__telefone__icontains=q) | Q(perfil__cpf__icontains=q)
+        )
+    return render(request, "painel/alunos_lista.html", {"alunos": alunos, "q": q})
+
+
+@staff_member_required
+def aluno_detalhe(request, pk):
+    aluno = get_object_or_404(User.objects.select_related("perfil"), pk=pk, is_staff=False)
+
+    matriculas = aluno.matriculas.select_related("curso").all()
+    cursos_info = [
+        {"matricula": m, "curso": m.curso, "progresso": calcular_progresso(aluno, m.curso)}
+        for m in matriculas
+    ]
+
+    aulas_concluidas = (
+        aluno.aulas_concluidas
+        .select_related("aula", "aula__modulo", "aula__modulo__curso")
+        .all()[:50]
+    )
+    pagamentos = Pagamento.objects.filter(aluno=aluno).select_related("curso").order_by("-criado_em")
+    certificados = Certificado.objects.filter(aluno=aluno).select_related("curso")
+
+    return render(request, "painel/aluno_detalhe.html", {
+        "aluno": aluno,
+        "perfil": getattr(aluno, "perfil", None),
+        "cursos_info": cursos_info,
+        "aulas_concluidas": aulas_concluidas,
+        "total_aulas_concluidas": aluno.aulas_concluidas.count(),
+        "pagamentos": pagamentos,
+        "certificados": certificados,
+    })
+
+
+@staff_member_required
+@require_POST
+def aluno_resetar_senha(request, pk):
+    aluno = get_object_or_404(User, pk=pk, is_staff=False)
+
+    senha_temporaria = secrets.token_urlsafe(9)
+    aluno.set_password(senha_temporaria)
+    aluno.save(update_fields=["password"])
+
+    perfil = getattr(aluno, "perfil", None)
+    if perfil:
+        perfil.deve_trocar_senha = True
+        perfil.save(update_fields=["deve_trocar_senha"])
+
+    email_ok = False
+    try:
+        NotificationService().notificar_credenciais(aluno, senha_temporaria)
+        email_ok = True
+    except Exception:
+        pass
+
+    if email_ok:
+        messages.success(
+            request,
+            f"Senha resetada. Nova senha temporária: {senha_temporaria} — "
+            f"também enviada por email para {aluno.email or 'o aluno'}.",
+        )
+    else:
+        messages.warning(
+            request,
+            f"Senha resetada para: {senha_temporaria} — anote e repasse ao aluno "
+            "(o email não foi enviado; verifique a configuração de notificações).",
+        )
+    return redirect("painel:aluno_detalhe", pk=aluno.pk)
+
+
+@staff_member_required
+@require_POST
+def aluno_toggle_ativo(request, pk):
+    aluno = get_object_or_404(User, pk=pk, is_staff=False)
+    aluno.is_active = not aluno.is_active
+    aluno.save(update_fields=["is_active"])
+    if aluno.is_active:
+        messages.success(request, f"Aluno {aluno.get_full_name() or aluno.get_username()} reativado — pode fazer login novamente.")
+    else:
+        messages.warning(request, f"Aluno {aluno.get_full_name() or aluno.get_username()} inativado — não consegue mais fazer login. Os dados foram preservados.")
+    return redirect("painel:aluno_detalhe", pk=aluno.pk)
+
+
+# --- Contato -----------------------------------------------------------------
+
+@staff_member_required
+def contatos_lista(request):
+    mensagens = ContatoMensagem.objects.all().order_by("-enviado_em")
+    return render(request, "painel/contatos_lista.html", {"mensagens": mensagens})
+
 
 @staff_member_required
 def faq_lista(request):

@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "painel/base_painel.html" %}
 {% block title %}{{ titulo_pagina }} — Painel{% endblock %}
 
-{% block content %}
+{% block painel_content %}
 <section class="max-w-lg mx-auto px-4 py-10">
     <a href="{% url 'painel:faq_lista' %}" class="text-sm text-brand-600 hover:underline">&larr; Perguntas frequentes</a>
     <h1 class="text-2xl font-bold mt-2 mb-6">{{ titulo_pagina }}</h1>

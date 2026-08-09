@@ -1,7 +1,7 @@
-{% extends "base.html" %}
+{% extends "painel/base_painel.html" %}
 {% block title %}Configuração de notificações — Painel{% endblock %}
 
-{% block content %}
+{% block painel_content %}
 <section class="max-w-2xl mx-auto px-4 py-10">
     <a href="{% url 'painel:dashboard' %}" class="text-sm text-brand-600 hover:underline">&larr; Painel</a>
     <h1 class="text-2xl font-bold mt-2 mb-1">Configuração de notificações</h1>
@@ -16,6 +16,15 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.backend.label }}</label>
             {{ form.backend }}
             {% for error in form.backend.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.site_url.label }}</label>
+            {{ form.site_url }}
+            {% if form.site_url.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.site_url.help_text }}</p>{% endif %}
+            {% for error in form.site_url.errors %}
                 <p class="text-red-600 text-xs mt-1">{{ error }}</p>
             {% endfor %}
         </div>

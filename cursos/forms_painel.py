@@ -149,7 +149,7 @@ class ConfiguracaoPagamentoForm(forms.ModelForm):
 class ConfiguracaoNotificacaoForm(forms.ModelForm):
     class Meta:
         model = ConfiguracaoNotificacao
-        fields = ["backend", "email_host", "email_port", "email_use_tls", "email_host_user", "email_host_password"]
+        fields = ["backend", "site_url", "email_host", "email_port", "email_use_tls", "email_host_user", "email_host_password"]
         widgets = {
             "email_host_password": forms.PasswordInput(render_value=True),
         }
