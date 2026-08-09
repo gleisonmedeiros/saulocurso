@@ -405,6 +405,64 @@ def aluno_toggle_ativo(request, pk):
     return redirect("painel:aluno_detalhe", pk=aluno.pk)
 
 
+# --- Comunicado (email em massa) ---------------------------------------------
+
+@staff_member_required
+def comunicado(request):
+    cursos = Curso.objects.order_by("titulo")
+
+    if request.method == "POST":
+        destino = request.POST.get("destino", "todos")
+        curso_id = request.POST.get("curso") or ""
+        assunto = (request.POST.get("assunto") or "").strip()
+        mensagem = (request.POST.get("mensagem") or "").strip()
+        confirmado = request.POST.get("confirmado") == "1"
+
+        curso = None
+        erros = []
+        if not assunto:
+            erros.append("Preencha o assunto.")
+        if not mensagem:
+            erros.append("Preencha a mensagem.")
+        if destino == "curso":
+            curso = cursos.filter(pk=curso_id).first() if curso_id.isdigit() else None
+            if not curso:
+                erros.append("Escolha um curso válido.")
+
+        if destino == "curso" and curso:
+            alunos = User.objects.filter(
+                is_active=True, is_staff=False,
+                matriculas__curso=curso, matriculas__ativo=True,
+            ).distinct()
+        else:
+            alunos = User.objects.filter(is_active=True, is_staff=False)
+        total = alunos.count()
+
+        contexto = {
+            "cursos": cursos, "destino": destino, "curso_id": curso_id,
+            "assunto": assunto, "mensagem": mensagem, "erros": erros, "total": total,
+        }
+
+        if erros:
+            return render(request, "painel/comunicado_form.html", contexto)
+
+        if not confirmado:
+            # passo 1: mostra confirmação com a contagem
+            contexto["precisa_confirmar"] = True
+            return render(request, "painel/comunicado_form.html", contexto)
+
+        # passo 2: envia
+        try:
+            enviados = NotificationService().enviar_comunicado(alunos, assunto, mensagem)
+            messages.success(request, f"Comunicado enviado para {enviados} aluno(s).")
+        except Exception:
+            logger.exception("Falha ao enviar comunicado")
+            messages.error(request, "Erro ao enviar o comunicado. Verifique a configuração de email.")
+        return redirect("painel:comunicado")
+
+    return render(request, "painel/comunicado_form.html", {"cursos": cursos, "destino": "todos"})
+
+
 # --- Contato -----------------------------------------------------------------
 
 @staff_member_required

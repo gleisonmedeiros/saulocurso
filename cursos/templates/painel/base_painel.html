@@ -18,6 +18,7 @@
                 <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Pessoas</p>
                 <a href="{% url 'painel:alunos_lista' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:alunos_lista' or vn == 'painel:aluno_detalhe' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Alunos</a>
                 <a href="{% url 'painel:contatos_lista' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:contatos_lista' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Contatos</a>
+                <a href="{% url 'painel:comunicado' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:comunicado' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Comunicados</a>
             </div>
 
             <div>

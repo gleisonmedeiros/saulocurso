@@ -178,6 +178,23 @@ class NotificationService:
             enviados += 1
         return enviados
 
+    def enviar_comunicado(self, alunos, assunto, mensagem):
+        """Envia um comunicado manual (assunto + texto livre) pra uma lista de
+        alunos. Retorna quantos emails foram disparados."""
+        enviados = 0
+        for aluno in alunos:
+            if not aluno.email:
+                continue
+            nome = aluno.get_full_name() or aluno.get_username()
+            corpo = (
+                f"Olá {nome},\n\n"
+                f"{mensagem}\n\n"
+                "Equipe RS Central dos Cursos"
+            )
+            self.backend.enviar_email(aluno.email, assunto, corpo)
+            enviados += 1
+        return enviados
+
     def notificar_contato(self, contato_mensagem):
         if contato_mensagem.tipo == contato_mensagem.Tipo.EMPRESA:
             assunto = "Novo pedido de orçamento — Empresas"

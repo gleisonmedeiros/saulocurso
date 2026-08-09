@@ -15,6 +15,7 @@ urlpatterns = [
     path("alunos/<int:pk>/resetar-senha/", views.aluno_resetar_senha, name="aluno_resetar_senha"),
     path("alunos/<int:pk>/toggle-ativo/", views.aluno_toggle_ativo, name="aluno_toggle_ativo"),
     path("contatos/", views.contatos_lista, name="contatos_lista"),
+    path("comunicado/", views.comunicado, name="comunicado"),
 
     path("cursos/novo/", views.curso_novo, name="curso_novo"),
     path("cursos/<int:pk>/", views.curso_detalhe, name="curso_detalhe"),
