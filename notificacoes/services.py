@@ -137,6 +137,47 @@ class NotificationService:
         )
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
+    def notificar_mentoria(self, mentoria):
+        """Avisa por email os alunos com matrícula ativa (e conta ativa) no
+        curso da mentoria. Retorna quantos emails foram disparados."""
+        from django.utils import timezone
+        from matriculas.models import Matricula
+
+        curso = mentoria.curso
+        base = (self.config.site_url or "").rstrip("/")
+        portal_url = f"{base}{reverse('accounts:login')}"
+        quando = timezone.localtime(mentoria.data_hora).strftime("%d/%m/%Y às %H:%M") if mentoria.data_hora else "a definir"
+        assunto = f"Nova mentoria ao vivo — {curso.titulo}"
+
+        matriculas = (
+            Matricula.objects.filter(curso=curso, ativo=True, aluno__is_active=True)
+            .select_related("aluno")
+        )
+        enviados = 0
+        for matricula in matriculas:
+            aluno = matricula.aluno
+            if not aluno.email:
+                continue
+            nome = aluno.get_full_name() or aluno.get_username()
+            mensagem = (
+                f"Olá {nome},\n\n"
+                f"Uma mentoria ao vivo foi agendada no curso \"{curso.titulo}\":\n\n"
+                f"{mentoria.titulo}\n"
+                f"Data: {quando}\n"
+            )
+            if getattr(mentoria, "descricao", ""):
+                mensagem += f"\n{mentoria.descricao}\n"
+            if getattr(mentoria, "link_reuniao", ""):
+                mensagem += f"\nLink da reunião: {mentoria.link_reuniao}\n"
+            mensagem += (
+                f"\nAcesse o Portal do Aluno: {portal_url}\n\n"
+                "Bons estudos!\n"
+                "Equipe RS Central dos Cursos"
+            )
+            self.backend.enviar_email(aluno.email, assunto, mensagem)
+            enviados += 1
+        return enviados
+
     def notificar_contato(self, contato_mensagem):
         if contato_mensagem.tipo == contato_mensagem.Tipo.EMPRESA:
             assunto = "Novo pedido de orçamento — Empresas"

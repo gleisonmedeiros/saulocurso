@@ -1,3 +1,4 @@
+import logging
 import secrets
 
 from django.contrib import messages
@@ -20,6 +21,16 @@ from .forms_painel import (
 from .models import Aula, ConfiguracaoSite, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
+
+
+def _notificar_mentoria(request, mentoria):
+    try:
+        enviados = NotificationService().notificar_mentoria(mentoria)
+        if enviados:
+            messages.info(request, f"{enviados} aluno(s) avisado(s) por email sobre a mentoria.")
+    except Exception:
+        logger.exception("Falha ao notificar mentoria %s", mentoria.pk)
 
 
 @staff_member_required
@@ -217,6 +228,7 @@ def mentoria_nova(request, curso_pk):
             mentoria = form.save(commit=False)
             mentoria.curso = curso
             mentoria.save()
+            _notificar_mentoria(request, mentoria)
             messages.success(request, "Mentoria agendada.")
             return redirect("painel:curso_detalhe", pk=curso.pk)
     else:
@@ -230,7 +242,8 @@ def mentoria_editar(request, pk):
     if request.method == "POST":
         form = MentoriaForm(request.POST, instance=mentoria)
         if form.is_valid():
-            form.save()
+            mentoria = form.save()
+            _notificar_mentoria(request, mentoria)
             messages.success(request, "Mentoria atualizada.")
             return redirect("painel:curso_detalhe", pk=mentoria.curso.pk)
     else:
