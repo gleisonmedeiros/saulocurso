@@ -8,15 +8,16 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from matriculas.models import Certificado
+from accounts.models import Perfil
+from matriculas.models import Certificado, Matricula
 from matriculas.progresso import calcular_progresso
 from notificacoes.models import ConfiguracaoNotificacao
 from notificacoes.services import NotificationService
 from pagamentos.models import ConfiguracaoPagamento, Pagamento
 
 from .forms_painel import (
-    AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CursoForm, MentoriaForm,
-    ModuloForm, PerguntaFrequenteForm, TurmaForm,
+    AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CursoForm,
+    MatricularAlunoForm, MentoriaForm, ModuloForm, PerguntaFrequenteForm, TurmaForm,
 )
 from .models import Aula, ConfiguracaoSite, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
@@ -325,6 +326,71 @@ def alunos_lista(request):
             | Q(perfil__telefone__icontains=q) | Q(perfil__cpf__icontains=q)
         )
     return render(request, "painel/alunos_lista.html", {"alunos": alunos, "q": q})
+
+
+@staff_member_required
+def aluno_novo(request):
+    """Matricula um aluno manualmente (ex: pagamento combinado fora do site).
+    Se já existir conta com esse email, só adiciona os cursos novos — não mexe
+    em senha nem dados de quem já tem conta."""
+    if request.method == "POST":
+        form = MatricularAlunoForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            nome = form.cleaned_data["nome"]
+            cursos = form.cleaned_data["cursos"]
+
+            aluno = User.objects.filter(username__iexact=email, is_staff=False).first()
+            conta_criada_agora = False
+            senha_temporaria = None
+
+            if not aluno:
+                senha_temporaria = secrets.token_urlsafe(9)
+                aluno = User.objects.create_user(username=email, email=email, first_name=nome)
+                aluno.set_password(senha_temporaria)
+                aluno.save()
+                Perfil.objects.create(
+                    user=aluno, telefone=form.cleaned_data["telefone"], cpf=form.cleaned_data["cpf"],
+                    deve_trocar_senha=True,
+                )
+                conta_criada_agora = True
+
+            notificacao = NotificationService()
+            cursos_novos = []
+            for curso in cursos:
+                _, criada = Matricula.objects.get_or_create(aluno=aluno, curso=curso, defaults={"ativo": True})
+                if criada:
+                    cursos_novos.append(curso)
+
+            for curso in cursos_novos:
+                try:
+                    notificacao.notificar_matricula(aluno, curso)
+                except Exception:
+                    logger.exception("Falha ao notificar matrícula manual pra %s (curso %s)", aluno.username, curso.pk)
+
+            if conta_criada_agora:
+                try:
+                    notificacao.notificar_credenciais(aluno, senha_temporaria)
+                except Exception:
+                    logger.exception("Falha ao enviar credenciais pra %s", aluno.username)
+
+                modo_mock = ConfiguracaoNotificacao.obter().backend == ConfiguracaoNotificacao.Backend.MOCK
+                if modo_mock:
+                    messages.success(
+                        request,
+                        f"Aluno cadastrado e matriculado em {len(cursos_novos)} curso(s). "
+                        f"Login: {aluno.username} — Senha temporária: {senha_temporaria}",
+                    )
+                else:
+                    messages.success(request, f"Aluno cadastrado, matriculado em {len(cursos_novos)} curso(s) e credenciais enviadas por email.")
+            else:
+                messages.success(request, f"{len(cursos_novos)} curso(s) novo(s) adicionado(s) à conta existente de {aluno.get_full_name() or aluno.username}.")
+
+            return redirect("painel:aluno_detalhe", pk=aluno.pk)
+    else:
+        form = MatricularAlunoForm()
+
+    return render(request, "painel/aluno_novo.html", {"form": form})
 
 
 @staff_member_required

@@ -11,6 +11,7 @@ urlpatterns = [
     path("notificacoes/", views.notificacoes_config, name="notificacoes_config"),
 
     path("alunos/", views.alunos_lista, name="alunos_lista"),
+    path("alunos/novo/", views.aluno_novo, name="aluno_novo"),
     path("alunos/<int:pk>/", views.aluno_detalhe, name="aluno_detalhe"),
     path("alunos/<int:pk>/resetar-senha/", views.aluno_resetar_senha, name="aluno_resetar_senha"),
     path("alunos/<int:pk>/toggle-ativo/", views.aluno_toggle_ativo, name="aluno_toggle_ativo"),

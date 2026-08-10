@@ -1,0 +1,46 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}Novo aluno — Painel{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-2xl mx-auto px-4 py-10">
+    <a href="{% url 'painel:alunos_lista' %}" class="text-sm text-brand-600 hover:underline">&larr; Alunos</a>
+    <h1 class="text-2xl font-bold text-brand-700 mt-2 mb-1">Matricular aluno manualmente</h1>
+    <p class="text-gray-500 text-sm mb-6">
+        Se o email já tiver conta, só adiciona os cursos escolhidos — sem mexer em senha.
+        Se for conta nova, gera usuário e senha temporária (o aluno troca no primeiro acesso).
+    </p>
+
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+        {% csrf_token %}
+
+        {% for field in form %}
+            {% if field.name != "cursos" %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+                    {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ form.cursos.label }}</label>
+            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                {% for checkbox in form.cursos %}
+                    <label class="flex items-center gap-2 text-sm text-gray-800">
+                        {{ checkbox.tag }} {{ checkbox.choice_label }}
+                    </label>
+                {% empty %}
+                    <p class="text-sm text-gray-400">Nenhum curso ativo.</p>
+                {% endfor %}
+            </div>
+            {% for error in form.cursos.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+
+        <button type="submit" class="bg-brand-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-brand-700">
+            Matricular aluno
+        </button>
+    </form>
+</section>
+{% endblock %}

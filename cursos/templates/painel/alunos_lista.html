@@ -9,12 +9,15 @@
             <h1 class="text-2xl font-bold text-brand-700">Alunos</h1>
             <p class="text-gray-500 text-sm">{{ alunos|length }} aluno(s) cadastrado(s).</p>
         </div>
-        <form method="get" class="flex gap-2">
-            <input type="text" name="q" value="{{ q }}" placeholder="Nome, email, telefone, CPF…"
-                   class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64">
-            <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700 text-sm">Buscar</button>
-            {% if q %}<a href="{% url 'painel:alunos_lista' %}" class="px-4 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50">Limpar</a>{% endif %}
-        </form>
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <form method="get" class="flex gap-2">
+                <input type="text" name="q" value="{{ q }}" placeholder="Nome, email, telefone, CPF…"
+                       class="border border-gray-300 rounded-lg px-4 py-2 text-sm w-64">
+                <button type="submit" class="bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-700 text-sm">Buscar</button>
+                {% if q %}<a href="{% url 'painel:alunos_lista' %}" class="px-4 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50">Limpar</a>{% endif %}
+            </form>
+            <a href="{% url 'painel:aluno_novo' %}" class="bg-brand-700 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-800 text-sm text-center">+ Novo aluno</a>
+        </div>
     </div>
 
     <div class="bg-white border border-gray-200 rounded-xl overflow-x-auto">
