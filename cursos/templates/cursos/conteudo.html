@@ -24,6 +24,60 @@
         {% endif %}
     </div>
 
+    {# Agenda de turmas #}
+    <div class="bg-white border border-gray-200 rounded-xl p-5 mb-8">
+        <h2 class="font-semibold text-gray-900 mb-3">Agenda de turmas</h2>
+        {% if situacao_turma.estado == "aberta" %}
+            {% if situacao_turma.turma.observacao %}
+                <p class="text-sm text-gray-500 mb-3">{{ situacao_turma.turma.observacao }}</p>
+            {% endif %}
+            <form method="post" action="{% url 'cursos:turma_ingressar' situacao_turma.turma.pk %}"
+                  onsubmit="return confirm('Confirmar ingresso em {{ situacao_turma.turma.nome_exibicao|escapejs }}?');">
+                {% csrf_token %}
+                <button type="submit" class="w-full bg-brand-600 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-brand-700">
+                    Ingressar em {{ situacao_turma.turma.nome_exibicao }}
+                </button>
+            </form>
+            <p class="text-xs text-gray-500 mt-2">
+                {% if situacao_turma.turma.vagas_disponiveis is not None %}
+                    {{ situacao_turma.turma.vagas_disponiveis }} vaga{{ situacao_turma.turma.vagas_disponiveis|pluralize }} restante{{ situacao_turma.turma.vagas_disponiveis|pluralize }}
+                {% else %}
+                    Vagas ilimitadas
+                {% endif %}
+                — {{ situacao_turma.turma.data_inicio|date:"d/m/Y" }}
+            </p>
+
+        {% elif situacao_turma.estado == "inscrito" %}
+            <p class="text-sm text-green-700 font-medium mb-1">✓ Vaga confirmada em {{ situacao_turma.turma.nome_exibicao }} — {{ situacao_turma.turma.data_inicio|date:"d/m/Y" }}</p>
+            {% if situacao_turma.turma.link_grupo_whatsapp %}
+                <a href="{{ situacao_turma.turma.link_grupo_whatsapp }}" target="_blank" rel="noopener" class="text-sm text-brand-600 hover:underline">Grupo do WhatsApp →</a>
+            {% endif %}
+            {% if situacao_turma.turma.informacoes_acesso %}
+                <p class="text-sm text-gray-500 mt-1 whitespace-pre-line">{{ situacao_turma.turma.informacoes_acesso }}</p>
+            {% endif %}
+
+        {% else %}
+            <p class="text-sm text-gray-500 mb-1">Turma esgotada no momento.</p>
+            {% if situacao_turma.proximas_turmas %}
+                <ul class="text-sm text-gray-400 mb-3 list-disc list-inside">
+                    {% for turma in situacao_turma.proximas_turmas %}
+                        <li>{{ turma.nome_exibicao }} — {{ turma.data_inicio|date:"d/m/Y" }}{% if turma.local_ou_modalidade %} — {{ turma.local_ou_modalidade }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if situacao_turma.interesse_registrado %}
+                <p class="text-sm text-brand-600 font-medium">Você será avisado(a) quando abrir.</p>
+            {% else %}
+                <form method="post" action="{% url 'cursos:turma_notificar_interesse' curso.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full border border-brand-600 text-brand-600 text-sm font-semibold py-2.5 rounded-lg hover:bg-brand-50">
+                        Quero ser avisado(a) quando abrir
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
+
     {% if curso.mentorias.all %}
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
             <h2 class="font-semibold text-amber-800 mb-2">Mentorias ao vivo agendadas</h2>

@@ -12,6 +12,8 @@
                 <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Conteúdo</p>
                 <a href="{% url 'painel:dashboard' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:dashboard' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Cursos</a>
                 <a href="{% url 'painel:faq_lista' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:faq_lista' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Perguntas frequentes</a>
+                <a href="{% url 'painel:agenda_turmas' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:agenda_turmas' or vn == 'painel:agenda_turma_detalhe' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Agenda de turmas</a>
+                <a href="{% url 'painel:cupom_lista' %}" class="block px-3 py-2 rounded-lg text-sm font-medium {% if vn == 'painel:cupom_lista' or vn == 'painel:cupom_novo' or vn == 'painel:cupom_editar' %}bg-brand-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">Cupons</a>
             </div>
 
             <div>

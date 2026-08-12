@@ -26,7 +26,14 @@
         <p class="text-gray-400 mb-6 text-sm line-clamp-3">{{ curso.descricao_curta }}</p>
         <div class="flex items-center justify-between border-t border-red-900/30 pt-5">
             {% if mostrar_preco %}
-                <p class="text-amber-500 font-extrabold text-lg">R$ {{ curso.preco }}</p>
+                <p>
+                    {% if curso.preco_final < curso.preco %}
+                        <span class="block text-xs text-gray-500 line-through">R$ {{ curso.preco }}</span>
+                        <span class="text-amber-500 font-extrabold text-lg">R$ {{ curso.preco_final }}</span>
+                    {% else %}
+                        <span class="text-amber-500 font-extrabold text-lg">R$ {{ curso.preco }}</span>
+                    {% endif %}
+                </p>
                 <span class="text-sm font-bold text-red-500 group-hover:text-amber-400 transition-colors flex items-center gap-1">Ver curso <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></span>
             {% else %}
                 <span class="text-sm font-bold text-red-500 group-hover:text-amber-400 transition-colors flex items-center gap-1">Saiba mais <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg></span>

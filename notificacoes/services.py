@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from django.core.mail import get_connection, send_mail
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import ConfiguracaoNotificacao, NotificacaoLog
 
@@ -140,7 +141,6 @@ class NotificationService:
     def notificar_mentoria(self, mentoria):
         """Avisa por email os alunos com matrícula ativa (e conta ativa) no
         curso da mentoria. Retorna quantos emails foram disparados."""
-        from django.utils import timezone
         from matriculas.models import Matricula
 
         curso = mentoria.curso
@@ -172,6 +172,54 @@ class NotificationService:
             mensagem += (
                 f"\nAcesse o Portal do Aluno: {portal_url}\n\n"
                 "Bons estudos!\n"
+                "Equipe RS Central dos Cursos"
+            )
+            self.backend.enviar_email(aluno.email, assunto, mensagem)
+            enviados += 1
+        return enviados
+
+    def notificar_ingresso_turma(self, aluno, turma):
+        """Manda o link do grupo/informações de acesso pro aluno que acabou
+        de ingressar na turma. Só é chamado depois do clique em "Ingressar"."""
+        curso = turma.curso
+        nome = aluno.get_full_name() or aluno.get_username()
+        nome_turma = turma.nome_exibicao()
+        quando = timezone.localtime(turma.data_inicio).strftime("%d/%m/%Y às %H:%M") if turma.data_inicio else "a definir"
+        assunto = f"Você ingressou em {nome_turma} — {curso.titulo}"
+        mensagem = (
+            f"Olá {nome},\n\n"
+            f"Sua vaga em \"{nome_turma}\" ({curso.titulo}) está confirmada!\n\n"
+            f"Data: {quando}\n"
+        )
+        if turma.local_ou_modalidade:
+            mensagem += f"Local/modalidade: {turma.local_ou_modalidade}\n"
+        if turma.link_grupo_whatsapp:
+            mensagem += f"\nGrupo do WhatsApp: {turma.link_grupo_whatsapp}\n"
+        if turma.informacoes_acesso:
+            mensagem += f"\n{turma.informacoes_acesso}\n"
+        mensagem += "\nBons estudos!\nEquipe RS Central dos Cursos"
+        self.backend.enviar_email(aluno.email, assunto, mensagem)
+
+    def notificar_turma_aberta(self, interessados, turma):
+        """Avisa quem pediu aviso (InteresseTurma) que abriu turma nova com
+        vaga pro curso. Retorna quantos emails foram disparados."""
+        curso = turma.curso
+        nome_turma = turma.nome_exibicao()
+        base = (self.config.site_url or "").rstrip("/")
+        portal_url = f"{base}{reverse('cursos:conteudo', args=[curso.slug])}"
+        quando = timezone.localtime(turma.data_inicio).strftime("%d/%m/%Y às %H:%M") if turma.data_inicio else "a definir"
+        assunto = f"Abriu turma nova — {curso.titulo}"
+        enviados = 0
+        for interesse in interessados:
+            aluno = interesse.aluno
+            if not aluno.email:
+                continue
+            nome = aluno.get_full_name() or aluno.get_username()
+            mensagem = (
+                f"Olá {nome},\n\n"
+                f"Abriu \"{nome_turma}\" pro curso \"{curso.titulo}\" que você pediu pra ser avisado(a):\n\n"
+                f"Data: {quando}\n\n"
+                f"As vagas são limitadas — acesse o curso pra garantir a sua:\n{portal_url}\n\n"
                 "Equipe RS Central dos Cursos"
             )
             self.backend.enviar_email(aluno.email, assunto, mensagem)

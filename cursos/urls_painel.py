@@ -13,10 +13,14 @@ urlpatterns = [
     path("alunos/", views.alunos_lista, name="alunos_lista"),
     path("alunos/novo/", views.aluno_novo, name="aluno_novo"),
     path("alunos/<int:pk>/", views.aluno_detalhe, name="aluno_detalhe"),
+    path("alunos/<int:pk>/editar/", views.aluno_editar, name="aluno_editar"),
     path("alunos/<int:pk>/resetar-senha/", views.aluno_resetar_senha, name="aluno_resetar_senha"),
     path("alunos/<int:pk>/toggle-ativo/", views.aluno_toggle_ativo, name="aluno_toggle_ativo"),
     path("contatos/", views.contatos_lista, name="contatos_lista"),
     path("comunicado/", views.comunicado, name="comunicado"),
+
+    path("agenda/", views.agenda_turmas, name="agenda_turmas"),
+    path("agenda/turmas/<int:pk>/", views.agenda_turma_detalhe, name="agenda_turma_detalhe"),
 
     path("cursos/novo/", views.curso_novo, name="curso_novo"),
     path("cursos/<int:pk>/", views.curso_detalhe, name="curso_detalhe"),
@@ -43,4 +47,9 @@ urlpatterns = [
     path("faq/novo/", views.faq_nova, name="faq_nova"),
     path("faq/<int:pk>/editar/", views.faq_editar, name="faq_editar"),
     path("faq/<int:pk>/excluir/", views.faq_excluir, name="faq_excluir"),
+
+    path("cupons/", views.cupom_lista, name="cupom_lista"),
+    path("cupons/novo/", views.cupom_novo, name="cupom_novo"),
+    path("cupons/<int:pk>/editar/", views.cupom_editar, name="cupom_editar"),
+    path("cupons/<int:pk>/excluir/", views.cupom_excluir, name="cupom_excluir"),
 ]

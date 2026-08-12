@@ -7,8 +7,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from matriculas.mixins import matricula_required_aula, matricula_required_curso
-from matriculas.models import AulaConcluida, Certificado, Matricula
+from matriculas.models import AulaConcluida, Certificado, InscricaoTurma, InteresseTurma, Matricula
 from matriculas.progresso import calcular_progresso, emitir_certificado_se_completo
+from matriculas.turmas import situacao_turma
 from notificacoes.services import NotificationService
 
 from .forms import ContatoForm
@@ -102,6 +103,47 @@ def minha_area(request):
     return render(request, "cursos/minha_area.html", {"matriculas": matriculas})
 
 
+@login_required
+def turma_ingressar(request, turma_id):
+    turma = get_object_or_404(Turma, pk=turma_id)
+    if request.method != "POST":
+        return redirect("cursos:conteudo", slug=turma.curso.slug)
+
+    if not Matricula.objects.filter(aluno=request.user, curso=turma.curso, ativo=True).exists():
+        return redirect("cursos:minha_area")
+
+    if not turma.esta_aberta():
+        messages.error(request, "Essa turma acabou de ficar sem vaga. Tenta a próxima ou pede aviso.")
+        return redirect("cursos:conteudo", slug=turma.curso.slug)
+
+    InscricaoTurma.objects.get_or_create(aluno=request.user, turma=turma)
+    try:
+        NotificationService().notificar_ingresso_turma(request.user, turma)
+    except Exception:
+        logger.exception("Falha ao enviar credenciais da turma %s pra %s", turma.pk, request.user.username)
+
+    messages.success(request, "Vaga confirmada! O link do grupo e as informações também foram enviados por email.")
+    return redirect("cursos:conteudo", slug=turma.curso.slug)
+
+
+@login_required
+def turma_notificar_interesse(request, curso_id):
+    curso = get_object_or_404(Curso, pk=curso_id)
+    if request.method != "POST":
+        return redirect("cursos:conteudo", slug=curso.slug)
+
+    if not Matricula.objects.filter(aluno=request.user, curso=curso, ativo=True).exists():
+        return redirect("cursos:minha_area")
+
+    interesse, criado = InteresseTurma.objects.get_or_create(aluno=request.user, curso=curso)
+    if not criado and interesse.notificado_em is not None:
+        interesse.notificado_em = None
+        interesse.save(update_fields=["notificado_em"])
+
+    messages.success(request, "Combinado! Você recebe um email assim que abrir uma turma nova.")
+    return redirect("cursos:conteudo", slug=curso.slug)
+
+
 @matricula_required_curso
 def conteudo(request, slug, curso):
     modulos = curso.modulos.prefetch_related("aulas")
@@ -119,6 +161,7 @@ def conteudo(request, slug, curso):
             "progresso": progresso,
             "aulas_concluidas_ids": aulas_concluidas_ids,
             "certificado": certificado,
+            "situacao_turma": situacao_turma(request.user, curso),
         },
     )
 

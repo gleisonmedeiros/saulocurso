@@ -88,7 +88,7 @@
             {% for turma in turmas %}
                 <li class="flex items-center justify-between px-5 py-3 text-sm">
                     <span>
-                        {{ turma.data_inicio|date:"d/m/Y H:i" }}
+                        <strong>{{ turma.nome_exibicao }}</strong> — {{ turma.data_inicio|date:"d/m/Y H:i" }}
                         {% if turma.local_ou_modalidade %}— {{ turma.local_ou_modalidade }}{% endif %}
                         {% if turma.vagas %}<span class="text-xs text-gray-400">· {{ turma.vagas }} vagas</span>{% endif %}
                     </span>

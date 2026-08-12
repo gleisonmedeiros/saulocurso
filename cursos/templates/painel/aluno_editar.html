@@ -1,0 +1,25 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}Editar {{ aluno.get_full_name|default:aluno.username }} — Painel{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-lg mx-auto px-4 py-10">
+    <a href="{% url 'painel:aluno_detalhe' aluno.pk %}" class="text-sm text-brand-600 hover:underline">&larr; {{ aluno.get_full_name|default:aluno.username }}</a>
+    <h1 class="text-2xl font-bold text-brand-700 mt-2 mb-1">Editar cadastro</h1>
+    <p class="text-gray-500 text-sm mb-6">
+        Alterar o email também muda o login do aluno — avise antes de mudar.
+    </p>
+
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+                {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Salvar</button>
+    </form>
+</section>
+{% endblock %}

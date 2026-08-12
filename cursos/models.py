@@ -1,5 +1,8 @@
+from decimal import Decimal
+
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class Curso(models.Model):
@@ -81,6 +84,24 @@ class Curso(models.Model):
             return self.capa_url_externa
         return ""
 
+    def cupom_automatico(self):
+        """Melhor cupom automático válido pra esse curso (maior desconto), ou
+        None. Usado pra mostrar o preço já com desconto sem o aluno digitar
+        nada."""
+        hoje = timezone.localdate()
+        return (
+            self.cupons.filter(tipo=Cupom.Tipo.AUTOMATICO, ativo=True, validade__gte=hoje)
+            .order_by("-percentual_desconto").first()
+        )
+
+    def preco_com_desconto(self, cupom=None):
+        cupom = cupom or self.cupom_automatico()
+        return cupom.aplicar(self.preco) if cupom else self.preco
+
+    @property
+    def preco_final(self):
+        return self.preco_com_desconto()
+
 
 class Modulo(models.Model):
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="modulos")
@@ -143,22 +164,54 @@ class MentoriaAoVivo(models.Model):
 
 
 class Turma(models.Model):
-    """Data pública de início de uma turma — alimenta a página /agenda/."""
+    """Data pública de início de uma turma — alimenta a página /agenda/ e,
+    pro aluno matriculado, o bloco de ingresso no Portal do Aluno."""
 
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="turmas")
+    nome = models.CharField(
+        "nome da turma", max_length=100, blank=True,
+        help_text="Ex: Turma Agosto/2026. Aparece pro aluno no botão de ingressar.",
+    )
     data_inicio = models.DateTimeField("data de início")
     local_ou_modalidade = models.CharField(
         "local ou modalidade", max_length=200, blank=True,
         help_text="Ex: Presencial — Auditório RS Central, ou 'Online ao vivo'.",
     )
     vagas = models.PositiveIntegerField(null=True, blank=True, help_text="Deixe em branco pra não exibir vagas.")
-    observacao = models.CharField(max_length=300, blank=True)
+    observacao = models.CharField(
+        max_length=300, blank=True,
+        help_text="Aparece pro aluno matriculado junto do botão de ingressar (antes de ingressar).",
+    )
+    link_grupo_whatsapp = models.URLField(
+        "link do grupo do WhatsApp", blank=True,
+        help_text="Só é mostrado/enviado ao aluno DEPOIS que ele ingressar na turma.",
+    )
+    informacoes_acesso = models.TextField(
+        "informações de acesso", blank=True,
+        help_text="Endereço, horário, o que levar etc. Só aparece pro aluno depois de ingressar (tela + email).",
+    )
 
     class Meta:
         ordering = ["data_inicio"]
 
     def __str__(self):
-        return f"{self.curso.titulo} — {self.data_inicio:%d/%m/%Y}"
+        rotulo = self.nome or f"{self.data_inicio:%d/%m/%Y}"
+        return f"{self.curso.titulo} — {rotulo}"
+
+    def nome_exibicao(self):
+        return self.nome or f"Turma de {self.data_inicio:%d/%m/%Y}"
+
+    def vagas_ocupadas(self):
+        return self.inscricoes.count()
+
+    def vagas_disponiveis(self):
+        if self.vagas is None:
+            return None
+        return max(self.vagas - self.vagas_ocupadas(), 0)
+
+    def esta_aberta(self):
+        disponiveis = self.vagas_disponiveis()
+        return disponiveis is None or disponiveis > 0
 
 
 class PerguntaFrequente(models.Model):
@@ -174,6 +227,52 @@ class PerguntaFrequente(models.Model):
 
     def __str__(self):
         return self.pergunta
+
+
+class Cupom(models.Model):
+    """Desconto por %, com validade. Automático desconta sozinho no preço do
+    curso (sem o aluno digitar nada); manual só vale se o aluno digitar o
+    código certo no checkout. `cursos` decide em quais cursos o cupom vale."""
+
+    class Tipo(models.TextChoices):
+        AUTOMATICO = "automatico", "Automático (desconta sozinho no preço)"
+        MANUAL = "manual", "Manual (aluno digita o código no checkout)"
+
+    codigo = models.CharField(max_length=30, unique=True)
+    percentual_desconto = models.DecimalField(
+        "% de desconto", max_digits=5, decimal_places=2,
+        help_text="Ex: 10 para 10%.",
+    )
+    tipo = models.CharField(max_length=20, choices=Tipo.choices)
+    validade = models.DateField("válido até")
+    ativo = models.BooleanField(default=True)
+    cursos = models.ManyToManyField(Curso, related_name="cupons", blank=True, verbose_name="cursos onde vale")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+
+    def __str__(self):
+        return f"{self.codigo} ({self.get_tipo_display()})"
+
+    def esta_valido(self):
+        return self.ativo and self.validade >= timezone.localdate()
+
+    def aplicar(self, preco_base):
+        desconto = preco_base * self.percentual_desconto / Decimal("100")
+        resultado = (preco_base - desconto).quantize(Decimal("0.01"))
+        return resultado if resultado > 0 else Decimal("0.00")
+
+    @classmethod
+    def buscar_manual_valido(cls, codigo, curso):
+        codigo = (codigo or "").strip()
+        if not codigo:
+            return None
+        hoje = timezone.localdate()
+        return cls.objects.filter(
+            codigo__iexact=codigo, tipo=cls.Tipo.MANUAL, ativo=True,
+            validade__gte=hoje, cursos=curso,
+        ).first()
 
 
 class ConfiguracaoSite(models.Model):

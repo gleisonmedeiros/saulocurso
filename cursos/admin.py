@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Aula, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+from .models import Aula, ContatoMensagem, Cupom, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
 
 
 class AulaInline(admin.TabularInline):
@@ -54,6 +54,14 @@ class TurmaAdmin(admin.ModelAdmin):
 class PerguntaFrequenteAdmin(admin.ModelAdmin):
     list_display = ("pergunta", "ordem", "ativa")
     list_editable = ("ordem", "ativa")
+
+
+@admin.register(Cupom)
+class CupomAdmin(admin.ModelAdmin):
+    list_display = ("codigo", "tipo", "percentual_desconto", "validade", "ativo")
+    list_filter = ("tipo", "ativo")
+    search_fields = ("codigo",)
+    filter_horizontal = ("cursos",)
 
 
 @admin.register(ContatoMensagem)

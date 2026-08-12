@@ -6,20 +6,23 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.models import Perfil
-from matriculas.models import Certificado, Matricula
+from matriculas.models import Certificado, InscricaoTurma, InteresseTurma, Matricula
 from matriculas.progresso import calcular_progresso
 from notificacoes.models import ConfiguracaoNotificacao
 from notificacoes.services import NotificationService
 from pagamentos.models import ConfiguracaoPagamento, Pagamento
 
 from .forms_painel import (
-    AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CursoForm,
-    MatricularAlunoForm, MentoriaForm, ModuloForm, PerguntaFrequenteForm, TurmaForm,
+    AlunoEditForm, AulaForm, ConfiguracaoNotificacaoForm, ConfiguracaoPagamentoForm, ConfiguracaoSiteForm, CupomForm,
+    CursoForm, MatricularAlunoForm, MentoriaForm, ModuloForm, PerguntaFrequenteForm, TurmaForm,
 )
-from .models import Aula, ConfiguracaoSite, ContatoMensagem, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+from .models import (
+    Aula, ConfiguracaoSite, ContatoMensagem, Cupom, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma,
+)
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -32,6 +35,21 @@ def _notificar_mentoria(request, mentoria):
             messages.info(request, f"{enviados} aluno(s) avisado(s) por email sobre a mentoria.")
     except Exception:
         logger.exception("Falha ao notificar mentoria %s", mentoria.pk)
+
+
+def _notificar_interessados_turma(request, turma):
+    if not turma.esta_aberta():
+        return
+    interessados = list(InteresseTurma.objects.filter(curso=turma.curso, notificado_em__isnull=True).select_related("aluno"))
+    if not interessados:
+        return
+    try:
+        enviados = NotificationService().notificar_turma_aberta(interessados, turma)
+        if enviados:
+            InteresseTurma.objects.filter(pk__in=[i.pk for i in interessados]).update(notificado_em=timezone.now())
+            messages.info(request, f"{enviados} interessado(s) avisado(s) por email sobre a turma nova.")
+    except Exception:
+        logger.exception("Falha ao notificar interessados da turma %s", turma.pk)
 
 
 @staff_member_required
@@ -275,6 +293,7 @@ def turma_nova(request, curso_pk):
             turma.curso = curso
             turma.save()
             messages.success(request, "Turma agendada.")
+            _notificar_interessados_turma(request, turma)
             return redirect("painel:curso_detalhe", pk=curso.pk)
     else:
         form = TurmaForm()
@@ -304,6 +323,79 @@ def turma_excluir(request, pk):
         messages.success(request, "Turma excluída.")
         return redirect("painel:curso_detalhe", pk=curso.pk)
     return render(request, "painel/confirmar_exclusao.html", {"objeto": turma, "voltar_url": "painel:curso_detalhe", "voltar_pk": curso.pk})
+
+
+# --- Agenda de turmas ----------------------------------------------------------
+
+@staff_member_required
+def agenda_turmas(request):
+    turmas = Turma.objects.select_related("curso").order_by("-data_inicio")
+    curso_id = request.GET.get("curso")
+    if curso_id:
+        turmas = turmas.filter(curso_id=curso_id)
+
+    for turma in turmas:
+        turma.ocupadas = turma.vagas_ocupadas()
+        turma.disponiveis = turma.vagas_disponiveis()
+
+    return render(request, "painel/agenda_turmas.html", {
+        "turmas": turmas, "cursos": Curso.objects.order_by("titulo"), "curso_id": curso_id,
+    })
+
+
+@staff_member_required
+def agenda_turma_detalhe(request, pk):
+    turma = get_object_or_404(Turma.objects.select_related("curso"), pk=pk)
+    inscritos = InscricaoTurma.objects.filter(turma=turma).select_related("aluno", "aluno__perfil")
+    interessados = InteresseTurma.objects.filter(curso=turma.curso, notificado_em__isnull=True).select_related("aluno", "aluno__perfil")
+    return render(request, "painel/agenda_turma_detalhe.html", {
+        "turma": turma, "inscritos": inscritos, "interessados": interessados,
+    })
+
+
+# --- Cupons de desconto -------------------------------------------------------
+
+@staff_member_required
+def cupom_lista(request):
+    cupons = Cupom.objects.all()
+    return render(request, "painel/cupom_lista.html", {"cupons": cupons})
+
+
+@staff_member_required
+def cupom_novo(request):
+    if request.method == "POST":
+        form = CupomForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cupom criado.")
+            return redirect("painel:cupom_lista")
+    else:
+        form = CupomForm()
+    return render(request, "painel/cupom_form.html", {"form": form, "titulo_pagina": "Novo cupom"})
+
+
+@staff_member_required
+def cupom_editar(request, pk):
+    cupom = get_object_or_404(Cupom, pk=pk)
+    if request.method == "POST":
+        form = CupomForm(request.POST, instance=cupom)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cupom atualizado.")
+            return redirect("painel:cupom_lista")
+    else:
+        form = CupomForm(instance=cupom)
+    return render(request, "painel/cupom_form.html", {"form": form, "titulo_pagina": f"Editar — {cupom.codigo}"})
+
+
+@staff_member_required
+def cupom_excluir(request, pk):
+    cupom = get_object_or_404(Cupom, pk=pk)
+    if request.method == "POST":
+        cupom.delete()
+        messages.success(request, "Cupom excluído.")
+        return redirect("painel:cupom_lista")
+    return render(request, "painel/confirmar_exclusao.html", {"objeto": cupom, "voltar_url": "painel:cupom_lista", "voltar_pk": None})
 
 
 # --- Pergunta frequente (FAQ) ----------------------------------------------
@@ -408,7 +500,7 @@ def aluno_detalhe(request, pk):
         .select_related("aula", "aula__modulo", "aula__modulo__curso")
         .all()[:50]
     )
-    pagamentos = Pagamento.objects.filter(aluno=aluno).select_related("curso").order_by("-criado_em")
+    pagamentos = Pagamento.objects.filter(aluno=aluno).select_related("curso", "cupom").order_by("-criado_em")
     certificados = Certificado.objects.filter(aluno=aluno).select_related("curso")
 
     return render(request, "painel/aluno_detalhe.html", {
@@ -420,6 +512,35 @@ def aluno_detalhe(request, pk):
         "pagamentos": pagamentos,
         "certificados": certificados,
     })
+
+
+@staff_member_required
+def aluno_editar(request, pk):
+    aluno = get_object_or_404(User, pk=pk, is_staff=False)
+    perfil = getattr(aluno, "perfil", None)
+
+    if request.method == "POST":
+        form = AlunoEditForm(request.POST, aluno=aluno)
+        if form.is_valid():
+            aluno.first_name = form.cleaned_data["nome"]
+            aluno.email = form.cleaned_data["email"]
+            aluno.username = form.cleaned_data["email"]
+            aluno.save(update_fields=["first_name", "email", "username"])
+            Perfil.objects.update_or_create(
+                user=aluno,
+                defaults={"telefone": form.cleaned_data["telefone"], "cpf": form.cleaned_data["cpf"]},
+            )
+            messages.success(request, "Dados do aluno atualizados.")
+            return redirect("painel:aluno_detalhe", pk=aluno.pk)
+    else:
+        form = AlunoEditForm(aluno=aluno, initial={
+            "nome": aluno.first_name,
+            "email": aluno.email or aluno.username,
+            "telefone": perfil.telefone if perfil else "",
+            "cpf": perfil.cpf if perfil else "",
+        })
+
+    return render(request, "painel/aluno_editar.html", {"form": form, "aluno": aluno})
 
 
 @staff_member_required
@@ -476,15 +597,18 @@ def aluno_toggle_ativo(request, pk):
 @staff_member_required
 def comunicado(request):
     cursos = Curso.objects.order_by("titulo")
+    turmas = Turma.objects.select_related("curso").order_by("-data_inicio")
 
     if request.method == "POST":
         destino = request.POST.get("destino", "todos")
         curso_id = request.POST.get("curso") or ""
+        turma_id = request.POST.get("turma") or ""
         assunto = (request.POST.get("assunto") or "").strip()
         mensagem = (request.POST.get("mensagem") or "").strip()
         confirmado = request.POST.get("confirmado") == "1"
 
         curso = None
+        turma = None
         erros = []
         if not assunto:
             erros.append("Preencha o assunto.")
@@ -494,18 +618,27 @@ def comunicado(request):
             curso = cursos.filter(pk=curso_id).first() if curso_id.isdigit() else None
             if not curso:
                 erros.append("Escolha um curso válido.")
+        elif destino == "turma":
+            turma = turmas.filter(pk=turma_id).first() if turma_id.isdigit() else None
+            if not turma:
+                erros.append("Escolha uma turma válida.")
 
         if destino == "curso" and curso:
             alunos = User.objects.filter(
                 is_active=True, is_staff=False,
                 matriculas__curso=curso, matriculas__ativo=True,
             ).distinct()
+        elif destino == "turma" and turma:
+            alunos = User.objects.filter(
+                is_active=True, is_staff=False,
+                inscricoes_turma__turma=turma,
+            ).distinct()
         else:
             alunos = User.objects.filter(is_active=True, is_staff=False)
         total = alunos.count()
 
         contexto = {
-            "cursos": cursos, "destino": destino, "curso_id": curso_id,
+            "cursos": cursos, "turmas": turmas, "destino": destino, "curso_id": curso_id, "turma_id": turma_id,
             "assunto": assunto, "mensagem": mensagem, "erros": erros, "total": total,
         }
 
@@ -526,7 +659,7 @@ def comunicado(request):
             messages.error(request, "Erro ao enviar o comunicado. Verifique a configuração de email.")
         return redirect("painel:comunicado")
 
-    return render(request, "painel/comunicado_form.html", {"cursos": cursos, "destino": "todos"})
+    return render(request, "painel/comunicado_form.html", {"cursos": cursos, "turmas": turmas, "destino": "todos"})
 
 
 # --- Contato -----------------------------------------------------------------

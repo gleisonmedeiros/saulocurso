@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from accounts.models import Perfil
-from cursos.models import Curso
+from cursos.models import Cupom, Curso
 from matriculas.models import Matricula
 from notificacoes.models import ConfiguracaoNotificacao
 from notificacoes.services import NotificationService
@@ -28,7 +28,23 @@ logger = logging.getLogger(__name__)
 SESSION_KEY_CURSO_PENDENTE = "pagamento_pendente_curso_id"
 SESSION_KEY_METODO_PENDENTE = "pagamento_pendente_metodo"
 SESSION_KEY_ORDER_NSU = "pagamento_pendente_order_nsu"
+SESSION_KEY_CUPOM_PENDENTE = "pagamento_pendente_cupom_codigo"
 METODOS_VALIDOS = {"pix", "cartao"}
+
+
+def _resolver_cupom(request, curso, codigo):
+    """Cupom manual digitado tem prioridade sobre o automático do curso.
+    Código inválido/expirado não trava o checkout — só não aplica desconto
+    manual (mantém o automático, se tiver), com um aviso pro usuário."""
+    cupom = None
+    if codigo:
+        cupom = Cupom.buscar_manual_valido(codigo, curso)
+        if not cupom:
+            messages.warning(request, "Cupom inválido ou expirado — não foi aplicado.")
+    if not cupom:
+        cupom = curso.cupom_automatico()
+    valor = cupom.aplicar(curso.preco) if cupom else curso.preco
+    return valor, cupom
 
 
 def checkout(request, slug):
@@ -50,6 +66,8 @@ def checkout(request, slug):
         metodo = request.POST.get("metodo")
         if metodo not in METODOS_VALIDOS:
             metodo = "pix"
+        cupom_codigo = (request.POST.get("cupom") or "").strip()
+        valor, cupom = _resolver_cupom(request, curso, cupom_codigo)
 
         if usa_infinitepay:
             cadastro_form = None
@@ -59,18 +77,18 @@ def checkout(request, slug):
                     return render(request, "pagamentos/checkout.html", {
                         "curso": curso, "payment_gateway": config_pagamento.gateway, "cadastro_form": cadastro_form,
                     })
-            return _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cadastro_form)
+            return _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cadastro_form, valor, cupom)
 
         # Mock — síncrono, aprova/recusa na hora, fluxo antigo intacto.
         gateway = get_payment_gateway()
-        resultado = gateway.cobrar(request.user if request.user.is_authenticated else None, curso, curso.preco)
+        resultado = gateway.cobrar(request.user if request.user.is_authenticated else None, curso, valor)
 
         if not resultado.aprovado:
             messages.error(request, "Pagamento recusado.")
             return render(request, "pagamentos/checkout.html", {"curso": curso, "payment_gateway": config_pagamento.gateway})
 
         if request.user.is_authenticated:
-            Pagamento.objects.create(aluno=request.user, curso=curso, valor=curso.preco, status="aprovado", metodo=metodo)
+            Pagamento.objects.create(aluno=request.user, curso=curso, valor=valor, cupom=cupom, status="aprovado", metodo=metodo)
             Matricula.objects.get_or_create(aluno=request.user, curso=curso, defaults={"ativo": True})
             NotificationService().notificar_matricula(request.user, curso)
             messages.success(request, "Pagamento aprovado! Curso liberado na sua área.")
@@ -78,6 +96,7 @@ def checkout(request, slug):
 
         request.session[SESSION_KEY_CURSO_PENDENTE] = curso.id
         request.session[SESSION_KEY_METODO_PENDENTE] = metodo
+        request.session[SESSION_KEY_CUPOM_PENDENTE] = cupom_codigo
         messages.success(request, "Pagamento aprovado! Complete seu cadastro pra liberar o acesso.")
         return redirect("pagamentos:cadastro")
 
@@ -113,7 +132,7 @@ def _criar_conta_pendente(dados):
     return aluno, True
 
 
-def _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cadastro_form):
+def _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cadastro_form, valor, cupom):
     aluno_criado_agora = False
     if request.user.is_authenticated:
         aluno = request.user
@@ -121,7 +140,7 @@ def _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cada
         aluno, aluno_criado_agora = _criar_conta_pendente(cadastro_form.cleaned_data)
 
     order_nsu = secrets.token_urlsafe(16)
-    pagamento = Pagamento.objects.create(aluno=aluno, curso=curso, valor=curso.preco, status="pendente", metodo=metodo)
+    pagamento = Pagamento.objects.create(aluno=aluno, curso=curso, valor=valor, cupom=cupom, status="pendente", metodo=metodo)
     cobranca = CobrancaExterna.objects.create(order_nsu=order_nsu, pagamento=pagamento)
 
     redirect_url = request.build_absolute_uri(reverse("pagamentos:aguardando")) + f"?ref={order_nsu}"
@@ -130,7 +149,7 @@ def _iniciar_checkout_infinitepay(request, curso, metodo, config_pagamento, cada
 
     try:
         gateway = InfinitePayGateway(config_pagamento.infinitepay_handle)
-        url_pagamento = gateway.criar_link(order_nsu, curso, curso.preco, redirect_url, webhook_url, cliente)
+        url_pagamento = gateway.criar_link(order_nsu, curso, valor, redirect_url, webhook_url, cliente)
     except (ValueError, requests.RequestException):
         cobranca.delete()
         pagamento.delete()
@@ -284,7 +303,9 @@ def cadastro_pos_pagamento(request):
                 deve_trocar_senha=True,
             )
             metodo = request.session.get(SESSION_KEY_METODO_PENDENTE, "pix")
-            Pagamento.objects.create(aluno=aluno, curso=curso, valor=curso.preco, status="aprovado", metodo=metodo)
+            cupom_codigo = request.session.get(SESSION_KEY_CUPOM_PENDENTE, "")
+            valor, cupom = _resolver_cupom(request, curso, cupom_codigo)
+            Pagamento.objects.create(aluno=aluno, curso=curso, valor=valor, cupom=cupom, status="aprovado", metodo=metodo)
             Matricula.objects.get_or_create(aluno=aluno, curso=curso, defaults={"ativo": True})
 
             notificacao = NotificationService()
@@ -296,6 +317,7 @@ def cadastro_pos_pagamento(request):
 
             del request.session[SESSION_KEY_CURSO_PENDENTE]
             request.session.pop(SESSION_KEY_METODO_PENDENTE, None)
+            request.session.pop(SESSION_KEY_CUPOM_PENDENTE, None)
             login(request, aluno)
 
             # No modo mock nada é enviado de verdade, então mostramos a senha

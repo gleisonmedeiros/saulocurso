@@ -1,11 +1,14 @@
 import re
 
 from django import forms
+from django.contrib.auth import get_user_model
 
 from notificacoes.models import ConfiguracaoNotificacao
 from pagamentos.models import ConfiguracaoPagamento
 
-from .models import Aula, ConfiguracaoSite, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+from .models import Aula, ConfiguracaoSite, Cupom, Curso, MentoriaAoVivo, Modulo, PerguntaFrequente, Turma
+
+User = get_user_model()
 
 INPUT_CLASS = "w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
 CHECKBOX_CLASS = "h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
@@ -27,6 +30,34 @@ class MatricularAlunoForm(forms.Form):
             if name == "cursos":
                 continue
             field.widget.attrs["class"] = INPUT_CLASS
+
+    def clean_cpf(self):
+        cpf = re.sub(r"\D", "", self.cleaned_data.get("cpf", ""))
+        if cpf and len(cpf) != 11:
+            raise forms.ValidationError("CPF inválido — deve ter 11 dígitos.")
+        return cpf
+
+
+class AlunoEditForm(forms.Form):
+    nome = forms.CharField(label="Nome completo", max_length=150)
+    email = forms.EmailField(label="Email (login)")
+    telefone = forms.CharField(label="Telefone (WhatsApp)", max_length=20, required=False)
+    cpf = forms.CharField(label="CPF", max_length=14, required=False)
+
+    def __init__(self, *args, aluno=None, **kwargs):
+        self._aluno = aluno
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = INPUT_CLASS
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        conflito = User.objects.filter(username__iexact=email)
+        if self._aluno:
+            conflito = conflito.exclude(pk=self._aluno.pk)
+        if conflito.exists():
+            raise forms.ValidationError("Já existe outra conta com este email.")
+        return email
 
     def clean_cpf(self):
         cpf = re.sub(r"\D", "", self.cleaned_data.get("cpf", ""))
@@ -210,15 +241,43 @@ class MentoriaForm(forms.ModelForm):
 class TurmaForm(forms.ModelForm):
     class Meta:
         model = Turma
-        fields = ["data_inicio", "local_ou_modalidade", "vagas", "observacao"]
+        fields = [
+            "nome", "data_inicio", "local_ou_modalidade", "vagas", "observacao",
+            "link_grupo_whatsapp", "informacoes_acesso",
+        ]
         widgets = {
             "data_inicio": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "informacoes_acesso": forms.Textarea(attrs={"rows": 4}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _aplicar_classes(self)
         self.fields["data_inicio"].input_formats = ["%Y-%m-%dT%H:%M"]
+
+
+class CupomForm(forms.ModelForm):
+    cursos = forms.ModelMultipleChoiceField(
+        label="cursos onde vale", queryset=Curso.objects.order_by("titulo"),
+        widget=forms.CheckboxSelectMultiple, required=False,
+    )
+
+    class Meta:
+        model = Cupom
+        fields = ["codigo", "percentual_desconto", "tipo", "validade", "ativo", "cursos"]
+        widgets = {
+            "validade": forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if name == "cursos":
+                continue
+            field.widget.attrs["class"] = CHECKBOX_CLASS if isinstance(field.widget, forms.CheckboxInput) else INPUT_CLASS
+
+    def clean_codigo(self):
+        return self.cleaned_data["codigo"].strip().upper()
 
 
 class PerguntaFrequenteForm(forms.ModelForm):

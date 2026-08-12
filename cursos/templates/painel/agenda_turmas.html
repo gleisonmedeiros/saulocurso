@@ -1,0 +1,60 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}Agenda de turmas — Painel{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-5xl mx-auto px-4 py-10">
+    <a href="{% url 'painel:dashboard' %}" class="text-sm text-brand-600 hover:underline">&larr; Painel</a>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-brand-700">Agenda de turmas</h1>
+            <p class="text-gray-500 text-sm">{{ turmas|length }} turma(s).</p>
+        </div>
+        <form method="get" class="flex gap-2">
+            <select name="curso" class="border border-gray-300 rounded-lg px-3 py-2 text-sm" onchange="this.form.submit()">
+                <option value="">Todos os cursos</option>
+                {% for c in cursos %}
+                    <option value="{{ c.pk }}" {% if curso_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.titulo }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-500 text-left">
+                <tr>
+                    <th class="px-5 py-3 font-medium">Curso</th>
+                    <th class="px-5 py-3 font-medium">Turma</th>
+                    <th class="px-5 py-3 font-medium">Data</th>
+                    <th class="px-5 py-3 font-medium">Local/modalidade</th>
+                    <th class="px-5 py-3 font-medium">Vagas</th>
+                    <th class="px-5 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for turma in turmas %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-5 py-3 font-medium text-gray-900">{{ turma.curso.titulo }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ turma.nome_exibicao }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ turma.data_inicio|date:"d/m/Y H:i" }}</td>
+                        <td class="px-5 py-3 text-gray-500">{{ turma.local_ou_modalidade|default:"—" }}</td>
+                        <td class="px-5 py-3 text-gray-500">
+                            {% if turma.disponiveis is not None %}
+                                {{ turma.ocupadas }}/{{ turma.vagas }}
+                                {% if turma.disponiveis == 0 %}<span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full ml-1">esgotada</span>{% endif %}
+                            {% else %}
+                                {{ turma.ocupadas }} inscrito(s) · ilimitada
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3 text-right">
+                            <a href="{% url 'painel:agenda_turma_detalhe' turma.pk %}" class="text-brand-600 hover:underline font-medium">Ver →</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="px-5 py-8 text-center text-gray-400">Nenhuma turma cadastrada ainda.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

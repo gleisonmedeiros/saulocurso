@@ -46,6 +46,9 @@ class Pagamento(models.Model):
     valor = models.DecimalField(max_digits=8, decimal_places=2)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pendente")
     metodo = models.CharField(max_length=30, default="mock")
+    cupom = models.ForeignKey(
+        "cursos.Cupom", on_delete=models.SET_NULL, null=True, blank=True, related_name="pagamentos",
+    )
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:

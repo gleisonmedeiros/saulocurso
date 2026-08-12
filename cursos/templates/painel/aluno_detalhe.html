@@ -12,6 +12,7 @@
             {% else %}
                 <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">inativo</span>
             {% endif %}
+            <a href="{% url 'painel:aluno_editar' aluno.pk %}" class="text-sm text-brand-600 hover:underline">Editar cadastro</a>
         </div>
     </div>
 
@@ -84,13 +85,14 @@
         {% if pagamentos %}
             <table class="w-full text-sm">
                 <thead class="text-gray-500 text-left">
-                    <tr><th class="py-2 font-medium">Curso</th><th class="py-2 font-medium">Valor</th><th class="py-2 font-medium">Status</th><th class="py-2 font-medium">Método</th><th class="py-2 font-medium">Data</th></tr>
+                    <tr><th class="py-2 font-medium">Curso</th><th class="py-2 font-medium">Valor</th><th class="py-2 font-medium">Cupom</th><th class="py-2 font-medium">Status</th><th class="py-2 font-medium">Método</th><th class="py-2 font-medium">Data</th></tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     {% for p in pagamentos %}
                         <tr>
                             <td class="py-2 text-gray-900">{{ p.curso.titulo }}</td>
                             <td class="py-2 text-gray-500">R$ {{ p.valor }}</td>
+                            <td class="py-2 text-gray-500">{% if p.cupom %}{{ p.cupom.codigo }} ({{ p.cupom.get_tipo_display }}){% else %}—{% endif %}</td>
                             <td class="py-2 text-gray-500">{{ p.status }}</td>
                             <td class="py-2 text-gray-500">{{ p.metodo }}</td>
                             <td class="py-2 text-gray-500">{{ p.criado_em|date:"d/m/Y" }}</td>

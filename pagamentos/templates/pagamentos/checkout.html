@@ -8,10 +8,22 @@
     <div class="bg-white border border-gray-200 rounded-xl p-6">
         <h2 class="font-semibold text-lg mb-1">{{ curso.titulo }}</h2>
         <p class="text-gray-500 text-sm mb-4">{{ curso.descricao_curta }}</p>
-        <p class="text-2xl font-bold text-brand-700 mb-6">R$ {{ curso.preco }}</p>
+        {% if curso.preco_final < curso.preco %}
+            <p class="text-sm text-gray-400 line-through mb-0">R$ {{ curso.preco }}</p>
+            <p class="text-2xl font-bold text-brand-700 mb-6">R$ {{ curso.preco_final }}</p>
+        {% else %}
+            <p class="text-2xl font-bold text-brand-700 mb-6">R$ {{ curso.preco }}</p>
+        {% endif %}
 
         <form method="post" class="space-y-4">
             {% csrf_token %}
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cupom de desconto (opcional)</label>
+                <input type="text" name="cupom" maxlength="30"
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+                       placeholder="Tem um código? Digita aqui">
+            </div>
 
             {% if user.is_authenticated %}
                 <p class="text-sm text-gray-500">Comprando como <strong>{{ user.email|default:user.username }}</strong>.</p>
