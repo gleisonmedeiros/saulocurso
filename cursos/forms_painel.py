@@ -239,16 +239,40 @@ class ConfiguracaoNotificacaoForm(forms.ModelForm):
 class MentoriaForm(forms.ModelForm):
     class Meta:
         model = MentoriaAoVivo
-        fields = ["titulo", "descricao", "data_hora", "link_reuniao"]
+        fields = ["titulo", "descricao", "data_hora", "link_reuniao", "publico", "alunos", "turma"]
         widgets = {
             "descricao": forms.Textarea(attrs={"rows": 3}),
             "data_hora": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "alunos": forms.SelectMultiple(attrs={"size": 8}),
         }
 
     def __init__(self, *args, **kwargs):
+        curso = kwargs.pop("curso", None)
         super().__init__(*args, **kwargs)
         _aplicar_classes(self)
         self.fields["data_hora"].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields["alunos"].required = False
+        self.fields["turma"].required = False
+
+        if curso is None and self.instance and self.instance.pk:
+            curso = self.instance.curso
+        if curso is not None:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            self.fields["alunos"].queryset = (
+                User.objects.filter(is_active=True, matriculas__curso=curso, matriculas__ativo=True)
+                .distinct().order_by("first_name", "username")
+            )
+            self.fields["turma"].queryset = curso.turmas.all()
+
+    def clean(self):
+        cleaned = super().clean()
+        publico = cleaned.get("publico")
+        if publico == MentoriaAoVivo.Publico.ALUNOS and not cleaned.get("alunos"):
+            self.add_error("alunos", "Escolha ao menos um aluno.")
+        if publico == MentoriaAoVivo.Publico.TURMA and not cleaned.get("turma"):
+            self.add_error("turma", "Escolha uma turma.")
+        return cleaned
 
 
 class TurmaForm(forms.ModelForm):

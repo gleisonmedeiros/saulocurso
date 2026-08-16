@@ -307,16 +307,17 @@ def aula_excluir(request, pk):
 def mentoria_nova(request, curso_pk):
     curso = get_object_or_404(Curso, pk=curso_pk)
     if request.method == "POST":
-        form = MentoriaForm(request.POST)
+        form = MentoriaForm(request.POST, curso=curso)
         if form.is_valid():
             mentoria = form.save(commit=False)
             mentoria.curso = curso
             mentoria.save()
+            form.save_m2m()
             _notificar_mentoria(request, mentoria)
             messages.success(request, "Mentoria agendada.")
             return redirect("painel:curso_detalhe", pk=curso.pk)
     else:
-        form = MentoriaForm()
+        form = MentoriaForm(curso=curso)
     return render(request, "painel/mentoria_form.html", {"form": form, "curso": curso, "titulo_pagina": "Nova mentoria"})
 
 
@@ -324,14 +325,14 @@ def mentoria_nova(request, curso_pk):
 def mentoria_editar(request, pk):
     mentoria = get_object_or_404(MentoriaAoVivo, pk=pk)
     if request.method == "POST":
-        form = MentoriaForm(request.POST, instance=mentoria)
+        form = MentoriaForm(request.POST, instance=mentoria, curso=mentoria.curso)
         if form.is_valid():
             mentoria = form.save()
             _notificar_mentoria(request, mentoria)
             messages.success(request, "Mentoria atualizada.")
             return redirect("painel:curso_detalhe", pk=mentoria.curso.pk)
     else:
-        form = MentoriaForm(instance=mentoria)
+        form = MentoriaForm(instance=mentoria, curso=mentoria.curso)
     return render(request, "painel/mentoria_form.html", {"form": form, "curso": mentoria.curso, "titulo_pagina": f"Editar — {mentoria.titulo}"})
 
 

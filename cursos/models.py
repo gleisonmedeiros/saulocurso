@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
@@ -151,17 +152,52 @@ class Aula(models.Model):
 
 
 class MentoriaAoVivo(models.Model):
+    class Publico(models.TextChoices):
+        TODOS = "todos", "Todos os alunos do curso"
+        ALUNOS = "alunos", "Alunos específicos"
+        TURMA = "turma", "Uma turma inteira"
+
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name="mentorias")
     titulo = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
     data_hora = models.DateTimeField()
     link_reuniao = models.URLField("link da reunião (Meet/Zoom)", blank=True)
 
+    publico = models.CharField(
+        "quem vê a mentoria", max_length=10, choices=Publico.choices, default=Publico.TODOS,
+    )
+    alunos = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name="mentorias",
+        help_text="Só usado quando o público é 'Alunos específicos'.",
+    )
+    turma = models.ForeignKey(
+        "Turma", on_delete=models.SET_NULL, null=True, blank=True, related_name="mentorias",
+        help_text="Só usado quando o público é 'Uma turma inteira'.",
+    )
+
     class Meta:
         ordering = ["data_hora"]
 
     def __str__(self):
         return f"{self.titulo} ({self.data_hora:%d/%m/%Y %H:%M})"
+
+    def destinatarios(self):
+        """Alunos (conta ativa) que devem ver/receber esta mentoria, conforme
+        o público escolhido."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        if self.publico == self.Publico.ALUNOS:
+            return self.alunos.filter(is_active=True)
+        if self.publico == self.Publico.TURMA and self.turma_id:
+            return User.objects.filter(is_active=True, inscricoes_turma__turma_id=self.turma_id).distinct()
+        return User.objects.filter(
+            is_active=True, matriculas__curso=self.curso, matriculas__ativo=True,
+        ).distinct()
+
+    def visivel_para(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.destinatarios().filter(pk=user.pk).exists()
 
 
 class Turma(models.Model):

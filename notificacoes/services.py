@@ -197,21 +197,14 @@ class NotificationService:
         self._whatsapp("codigo", self._telefone(aluno), mensagem)
 
     def notificar_mentoria(self, mentoria):
-        """Avisa por email os alunos com matrícula ativa (e conta ativa) no
-        curso da mentoria. Retorna quantos emails foram disparados."""
-        from matriculas.models import Matricula
-
+        """Avisa por email os destinatários da mentoria (todos do curso, alunos
+        específicos ou uma turma). Retorna quantos emails foram disparados."""
         curso = mentoria.curso
         portal_url = self._portal_login()
         quando = timezone.localtime(mentoria.data_hora).strftime("%d/%m/%Y às %H:%M") if mentoria.data_hora else "a definir"
 
-        matriculas = (
-            Matricula.objects.filter(curso=curso, ativo=True, aluno__is_active=True)
-            .select_related("aluno")
-        )
         enviados = 0
-        for matricula in matriculas:
-            aluno = matricula.aluno
+        for aluno in mentoria.destinatarios():
             if not aluno.email:
                 continue
             nome = aluno.get_full_name() or aluno.get_username()

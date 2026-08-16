@@ -152,6 +152,7 @@ def conteudo(request, slug, curso):
         AulaConcluida.objects.filter(aluno=request.user, aula__modulo__curso=curso).values_list("aula_id", flat=True)
     )
     certificado = Certificado.objects.filter(aluno=request.user, curso=curso).first()
+    mentorias = [m for m in curso.mentorias.all() if m.visivel_para(request.user)]
     return render(
         request,
         "cursos/conteudo.html",
@@ -161,6 +162,7 @@ def conteudo(request, slug, curso):
             "progresso": progresso,
             "aulas_concluidas_ids": aulas_concluidas_ids,
             "certificado": certificado,
+            "mentorias": mentorias,
             "situacao_turma": situacao_turma(request.user, curso),
         },
     )

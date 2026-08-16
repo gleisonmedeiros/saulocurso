@@ -78,11 +78,11 @@
         {% endif %}
     </div>
 
-    {% if curso.mentorias.all %}
+    {% if mentorias %}
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
             <h2 class="font-semibold text-amber-800 mb-2">Mentorias ao vivo agendadas</h2>
             <ul class="space-y-1 text-sm text-amber-900">
-                {% for mentoria in curso.mentorias.all %}
+                {% for mentoria in mentorias %}
                     <li>{{ mentoria.titulo }} — {{ mentoria.data_hora|date:"d/m/Y H:i" }}
                         {% if mentoria.link_reuniao %}
                             <a href="{{ mentoria.link_reuniao }}" class="underline" target="_blank" rel="noopener">entrar</a>
