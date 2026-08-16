@@ -5,7 +5,8 @@ from django.core.mail import get_connection, send_mail
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import ConfiguracaoNotificacao, NotificacaoLog
+from .emails import render as render_email
+from .models import ConfiguracaoNotificacao, ModeloEmail, NotificacaoLog
 
 logger = logging.getLogger(__name__)
 
@@ -77,28 +78,27 @@ class NotificationService:
         self.config = ConfiguracaoNotificacao.obter()
         self.backend = get_notification_backend()
 
-    def notificar_matricula(self, aluno, curso):
-        assunto = f"Inscrição confirmada — {curso.titulo}"
-        mensagem_aluno = f"Olá {aluno.get_full_name() or aluno.get_username()}, sua inscrição no curso '{curso.titulo}' foi confirmada!"
+    def _montar(self, chave, contexto):
+        """Pega assunto+corpo do modelo (painel ou padrão) e aplica os
+        placeholders do contexto."""
+        assunto, corpo = ModeloEmail.texto(chave)
+        return render_email(assunto, contexto), render_email(corpo, contexto)
 
+    def _portal_login(self):
+        return f"{(self.config.site_url or '').rstrip('/')}{reverse('accounts:login')}"
+
+    def notificar_matricula(self, aluno, curso):
         perfil = getattr(aluno, "perfil", None)
         telefone = getattr(perfil, "telefone", "") or "-"
         nome = aluno.get_full_name() or aluno.get_username()
         preco = getattr(curso, "preco", None)
         valor = f"R$ {preco:.2f}".replace(".", ",") if preco is not None else "-"
-        assunto_admin = f"Nova matrícula — {curso.titulo}"
-        mensagem_admin = (
-            "Uma nova matrícula foi registrada na plataforma.\n\n"
-            "── Aluno ──\n"
-            f"Nome: {nome}\n"
-            f"Email: {aluno.email or '-'}\n"
-            f"Telefone: {telefone}\n"
-            f"Usuário: {aluno.get_username()}\n\n"
-            "── Curso ──\n"
-            f"Título: {curso.titulo}\n"
-            f"Valor: {valor}\n\n"
-            "Acesse o painel para mais detalhes."
-        )
+
+        assunto, mensagem_aluno = self._montar("matricula_aluno", {"nome": nome, "curso": curso.titulo})
+        assunto_admin, mensagem_admin = self._montar("matricula_admin", {
+            "nome": nome, "email": aluno.email or "-", "telefone": telefone,
+            "login": aluno.get_username(), "curso": curso.titulo, "valor": valor,
+        })
 
         self.backend.enviar_email(aluno.email or aluno.get_username(), assunto, mensagem_aluno)
         self.backend.enviar_whatsapp(telefone if telefone != "-" else aluno.get_username(), mensagem_aluno)
@@ -106,36 +106,16 @@ class NotificationService:
         self.backend.enviar_email(self.config.email_destino_admin(), assunto_admin, mensagem_admin)
 
     def notificar_credenciais(self, aluno, senha_temporaria):
-        assunto = "Seu acesso ao Portal do Aluno — RS Central dos Cursos"
-        base = (self.config.site_url or "").rstrip("/")
-        portal_url = f"{base}{reverse('accounts:login')}"
         nome = aluno.get_full_name() or aluno.get_username()
-        mensagem = (
-            f"Olá {nome}, seu cadastro foi concluído com sucesso!\n\n"
-            "Já pode acessar o Portal do Aluno e começar seus estudos.\n\n"
-            "── Seus dados de acesso ──\n"
-            f"Portal do Aluno: {portal_url}\n"
-            f"Usuário (login): {aluno.get_username()}\n"
-            f"Senha temporária: {senha_temporaria}\n\n"
-            "Por segurança, no primeiro acesso o sistema vai pedir para você "
-            "trocar essa senha temporária por uma senha pessoal.\n\n"
-            "Bons estudos!\n"
-            "Equipe RS Central dos Cursos"
-        )
+        assunto, mensagem = self._montar("credenciais", {
+            "nome": nome, "login": aluno.get_username(),
+            "senha": senha_temporaria, "portal": self._portal_login(),
+        })
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
     def notificar_codigo_recuperacao(self, aluno, codigo):
-        assunto = "Código para redefinir sua senha — RS Central dos Cursos"
         nome = aluno.get_full_name() or aluno.get_username()
-        mensagem = (
-            f"Olá {nome},\n\n"
-            "Recebemos um pedido para redefinir a senha da sua conta.\n\n"
-            f"Seu código de verificação é: {codigo}\n\n"
-            "Ele expira em 15 minutos. Digite esse código na tela de recuperação "
-            "para criar uma nova senha.\n\n"
-            "Se você não pediu isso, ignore este email — sua senha continua a mesma.\n\n"
-            "Equipe RS Central dos Cursos"
-        )
+        assunto, mensagem = self._montar("codigo_recuperacao", {"nome": nome, "codigo": codigo})
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
     def notificar_mentoria(self, mentoria):
@@ -144,10 +124,8 @@ class NotificationService:
         from matriculas.models import Matricula
 
         curso = mentoria.curso
-        base = (self.config.site_url or "").rstrip("/")
-        portal_url = f"{base}{reverse('accounts:login')}"
+        portal_url = self._portal_login()
         quando = timezone.localtime(mentoria.data_hora).strftime("%d/%m/%Y às %H:%M") if mentoria.data_hora else "a definir"
-        assunto = f"Nova mentoria ao vivo — {curso.titulo}"
 
         matriculas = (
             Matricula.objects.filter(curso=curso, ativo=True, aluno__is_active=True)
@@ -159,21 +137,11 @@ class NotificationService:
             if not aluno.email:
                 continue
             nome = aluno.get_full_name() or aluno.get_username()
-            mensagem = (
-                f"Olá {nome},\n\n"
-                f"Uma mentoria ao vivo foi agendada no curso \"{curso.titulo}\":\n\n"
-                f"{mentoria.titulo}\n"
-                f"Data: {quando}\n"
-            )
-            if getattr(mentoria, "descricao", ""):
-                mensagem += f"\n{mentoria.descricao}\n"
-            if getattr(mentoria, "link_reuniao", ""):
-                mensagem += f"\nLink da reunião: {mentoria.link_reuniao}\n"
-            mensagem += (
-                f"\nAcesse o Portal do Aluno: {portal_url}\n\n"
-                "Bons estudos!\n"
-                "Equipe RS Central dos Cursos"
-            )
+            assunto, mensagem = self._montar("mentoria", {
+                "nome": nome, "curso": curso.titulo, "titulo": mentoria.titulo,
+                "data": quando, "descricao": getattr(mentoria, "descricao", "") or "",
+                "link": getattr(mentoria, "link_reuniao", "") or "", "portal": portal_url,
+            })
             self.backend.enviar_email(aluno.email, assunto, mensagem)
             enviados += 1
         return enviados
@@ -185,19 +153,11 @@ class NotificationService:
         nome = aluno.get_full_name() or aluno.get_username()
         nome_turma = turma.nome_exibicao()
         quando = timezone.localtime(turma.data_inicio).strftime("%d/%m/%Y às %H:%M") if turma.data_inicio else "a definir"
-        assunto = f"Você ingressou em {nome_turma} — {curso.titulo}"
-        mensagem = (
-            f"Olá {nome},\n\n"
-            f"Sua vaga em \"{nome_turma}\" ({curso.titulo}) está confirmada!\n\n"
-            f"Data: {quando}\n"
-        )
-        if turma.local_ou_modalidade:
-            mensagem += f"Local/modalidade: {turma.local_ou_modalidade}\n"
-        if turma.link_grupo_whatsapp:
-            mensagem += f"\nGrupo do WhatsApp: {turma.link_grupo_whatsapp}\n"
-        if turma.informacoes_acesso:
-            mensagem += f"\n{turma.informacoes_acesso}\n"
-        mensagem += "\nBons estudos!\nEquipe RS Central dos Cursos"
+        assunto, mensagem = self._montar("ingresso_turma", {
+            "nome": nome, "curso": curso.titulo, "turma": nome_turma, "data": quando,
+            "local": turma.local_ou_modalidade or "", "whatsapp": turma.link_grupo_whatsapp or "",
+            "info": turma.informacoes_acesso or "",
+        })
         self.backend.enviar_email(aluno.email, assunto, mensagem)
 
     def notificar_turma_aberta(self, interessados, turma):
@@ -208,20 +168,16 @@ class NotificationService:
         base = (self.config.site_url or "").rstrip("/")
         portal_url = f"{base}{reverse('cursos:conteudo', args=[curso.slug])}"
         quando = timezone.localtime(turma.data_inicio).strftime("%d/%m/%Y às %H:%M") if turma.data_inicio else "a definir"
-        assunto = f"Abriu turma nova — {curso.titulo}"
         enviados = 0
         for interesse in interessados:
             aluno = interesse.aluno
             if not aluno.email:
                 continue
             nome = aluno.get_full_name() or aluno.get_username()
-            mensagem = (
-                f"Olá {nome},\n\n"
-                f"Abriu \"{nome_turma}\" pro curso \"{curso.titulo}\" que você pediu pra ser avisado(a):\n\n"
-                f"Data: {quando}\n\n"
-                f"As vagas são limitadas — acesse o curso pra garantir a sua:\n{portal_url}\n\n"
-                "Equipe RS Central dos Cursos"
-            )
+            assunto, mensagem = self._montar("turma_aberta", {
+                "nome": nome, "curso": curso.titulo, "turma": nome_turma,
+                "data": quando, "link": portal_url,
+            })
             self.backend.enviar_email(aluno.email, assunto, mensagem)
             enviados += 1
         return enviados
@@ -244,13 +200,10 @@ class NotificationService:
         return enviados
 
     def notificar_contato(self, contato_mensagem):
-        if contato_mensagem.tipo == contato_mensagem.Tipo.EMPRESA:
-            assunto = "Novo pedido de orçamento — Empresas"
-        else:
-            assunto = "Nova mensagem de contato pelo site"
-        mensagem = (
-            f"Email: {contato_mensagem.email}\n"
-            f"Telefone: {contato_mensagem.telefone or '-'}\n\n"
-            f"{contato_mensagem.mensagem}"
-        )
+        chave = "contato_empresa" if contato_mensagem.tipo == contato_mensagem.Tipo.EMPRESA else "contato"
+        assunto, mensagem = self._montar(chave, {
+            "email": contato_mensagem.email,
+            "telefone": contato_mensagem.telefone or "-",
+            "mensagem": contato_mensagem.mensagem,
+        })
         self.backend.enviar_email(self.config.email_destino_admin(), assunto, mensagem)

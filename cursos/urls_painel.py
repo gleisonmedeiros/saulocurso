@@ -9,6 +9,8 @@ urlpatterns = [
     path("configuracoes/", views.configuracoes, name="configuracoes"),
     path("pagamento/", views.pagamento_config, name="pagamento_config"),
     path("notificacoes/", views.notificacoes_config, name="notificacoes_config"),
+    path("mensagens/", views.modelos_email_lista, name="modelos_email_lista"),
+    path("mensagens/<str:chave>/", views.modelo_email_editar, name="modelo_email_editar"),
 
     path("alunos/", views.alunos_lista, name="alunos_lista"),
     path("alunos/novo/", views.aluno_novo, name="aluno_novo"),
@@ -22,6 +24,7 @@ urlpatterns = [
     path("agenda/", views.agenda_turmas, name="agenda_turmas"),
     path("agenda/turmas/<int:pk>/", views.agenda_turma_detalhe, name="agenda_turma_detalhe"),
 
+    path("cursos/ordenar/", views.cursos_ordenar, name="cursos_ordenar"),
     path("cursos/novo/", views.curso_novo, name="curso_novo"),
     path("cursos/<int:pk>/", views.curso_detalhe, name="curso_detalhe"),
     path("cursos/<int:pk>/editar/", views.curso_editar, name="curso_editar"),

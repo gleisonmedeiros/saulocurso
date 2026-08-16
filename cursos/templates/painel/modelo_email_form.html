@@ -1,0 +1,42 @@
+{% extends "painel/base_painel.html" %}
+{% block title %}{{ meta.nome }} — Mensagens de email{% endblock %}
+
+{% block painel_content %}
+<section class="max-w-2xl mx-auto px-4 py-10">
+    <a href="{% url 'painel:modelos_email_lista' %}" class="text-sm text-brand-600 hover:underline">&larr; Mensagens de email</a>
+    <h1 class="text-2xl font-bold text-brand-700 mt-2 mb-1">{{ meta.nome }}</h1>
+    <p class="text-gray-500 text-sm mb-4">{{ meta.descricao }}</p>
+
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-sm">
+        <p class="font-medium text-gray-700 mb-2">Você pode usar estes campos no texto:</p>
+        <div class="flex flex-wrap gap-2">
+            {% for p in meta.placeholders %}
+                <code class="bg-white border border-gray-200 rounded px-2 py-1 text-brand-700">{% templatetag openbrace %}{{ p }}{% templatetag closebrace %}</code>
+            {% endfor %}
+        </div>
+        <p class="text-gray-400 text-xs mt-3">Ex.: “Olá {% templatetag openbrace %}nome{% templatetag closebrace %}” vira “Olá João”. Um campo desconhecido é ignorado.</p>
+    </div>
+
+    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Assunto</label>
+            <input type="text" name="assunto" value="{{ assunto }}" maxlength="255"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mensagem</label>
+            <textarea name="corpo" rows="14"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">{{ corpo }}</textarea>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <button type="submit" class="bg-brand-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-brand-700">Salvar</button>
+            {% if personalizado %}
+                <button type="submit" name="restaurar" value="1"
+                        onsubmit="return confirm('Restaurar o texto padrão?');"
+                        class="border border-gray-300 px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-50">Restaurar padrão</button>
+            {% endif %}
+        </div>
+    </form>
+</section>
+{% endblock %}

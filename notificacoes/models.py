@@ -48,6 +48,35 @@ class ConfiguracaoNotificacao(models.Model):
         return self.email_host_user or settings.ADMIN_NOTIFICATION_EMAIL
 
 
+class ModeloEmail(models.Model):
+    """Texto (assunto + corpo) de um email, editável no painel. Se assunto ou
+    corpo ficarem em branco, o service usa o padrão de notificacoes.emails."""
+
+    chave = models.CharField(max_length=50, unique=True)
+    assunto = models.CharField(max_length=255, blank=True)
+    corpo = models.TextField(blank=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Modelo de email"
+        verbose_name_plural = "Modelos de email"
+
+    def __str__(self):
+        from .emails import MODELOS
+        return MODELOS.get(self.chave, {}).get("nome", self.chave)
+
+    @classmethod
+    def texto(cls, chave):
+        """Retorna (assunto, corpo) efetivos: o que estiver salvo no painel ou,
+        se vazio, o padrão embutido em emails.MODELOS."""
+        from .emails import MODELOS
+        base = MODELOS[chave]
+        row = cls.objects.filter(chave=chave).first()
+        assunto = (row.assunto if row and row.assunto.strip() else base["assunto"])
+        corpo = (row.corpo if row and row.corpo.strip() else base["corpo"])
+        return assunto, corpo
+
+
 class NotificacaoLog(models.Model):
     CANAL_CHOICES = [
         ("email", "Email"),

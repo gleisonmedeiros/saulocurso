@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -12,7 +13,8 @@ from django.views.decorators.http import require_POST
 from accounts.models import Perfil
 from matriculas.models import Certificado, InscricaoTurma, InteresseTurma, Matricula
 from matriculas.progresso import calcular_progresso
-from notificacoes.models import ConfiguracaoNotificacao
+from notificacoes.emails import MODELOS as MODELOS_EMAIL
+from notificacoes.models import ConfiguracaoNotificacao, ModeloEmail
 from notificacoes.services import NotificationService
 from pagamentos.models import ConfiguracaoPagamento, Pagamento
 
@@ -100,7 +102,70 @@ def notificacoes_config(request):
     return render(request, "painel/notificacoes_form.html", {"form": form})
 
 
+# --- Modelos de email --------------------------------------------------------
+
+@staff_member_required
+def modelos_email_lista(request):
+    modelos = []
+    for chave, meta in MODELOS_EMAIL.items():
+        row = ModeloEmail.objects.filter(chave=chave).first()
+        personalizado = bool(row and (row.assunto.strip() or row.corpo.strip()))
+        modelos.append({
+            "chave": chave, "nome": meta["nome"], "descricao": meta["descricao"],
+            "personalizado": personalizado,
+        })
+    return render(request, "painel/modelos_email_lista.html", {"modelos": modelos})
+
+
+@staff_member_required
+def modelo_email_editar(request, chave):
+    meta = MODELOS_EMAIL.get(chave)
+    if not meta:
+        raise Http404("Modelo de email não encontrado.")
+    row, _ = ModeloEmail.objects.get_or_create(chave=chave)
+
+    if request.method == "POST":
+        if "restaurar" in request.POST:
+            row.assunto = ""
+            row.corpo = ""
+            row.save()
+            messages.success(request, "Modelo restaurado para o texto padrão.")
+            return redirect("painel:modelo_email_editar", chave=chave)
+        row.assunto = (request.POST.get("assunto") or "").strip()
+        row.corpo = (request.POST.get("corpo") or "").strip()
+        row.save()
+        messages.success(request, "Modelo de email salvo.")
+        return redirect("painel:modelos_email_lista")
+
+    return render(request, "painel/modelo_email_form.html", {
+        "chave": chave, "meta": meta,
+        "assunto": row.assunto or meta["assunto"],
+        "corpo": row.corpo or meta["corpo"],
+        "personalizado": bool(row.assunto or row.corpo),
+    })
+
+
 # --- Curso -----------------------------------------------------------------
+
+@staff_member_required
+def cursos_ordenar(request):
+    """Reordena os cursos da home arrastando. O POST recebe a lista de ids na
+    nova ordem e regrava o campo `ordem` sequencialmente (0,1,2...)."""
+    if request.method == "POST":
+        ids = request.POST.getlist("ordem")
+        pks = [int(i) for i in ids if i.isdigit()]
+        cursos = Curso.objects.in_bulk(pks)
+        for posicao, pk in enumerate(pks):
+            curso = cursos.get(pk)
+            if curso and curso.ordem != posicao:
+                curso.ordem = posicao
+                curso.save(update_fields=["ordem"])
+        messages.success(request, "Ordem dos cursos atualizada.")
+        return redirect("painel:cursos_ordenar")
+
+    cursos = Curso.objects.all()  # já vem por ordem (Meta.ordering)
+    return render(request, "painel/cursos_ordenar.html", {"cursos": cursos})
+
 
 @staff_member_required
 def curso_detalhe(request, pk):
