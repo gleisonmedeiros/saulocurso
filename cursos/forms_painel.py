@@ -204,9 +204,17 @@ class ConfiguracaoPagamentoForm(forms.ModelForm):
 class ConfiguracaoNotificacaoForm(forms.ModelForm):
     class Meta:
         model = ConfiguracaoNotificacao
-        fields = ["backend", "site_url", "email_host", "email_port", "email_use_tls", "email_host_user", "email_host_password"]
+        fields = [
+            "backend", "site_url", "email_host", "email_port", "email_use_tls",
+            "email_host_user", "email_host_password",
+            "whatsapp_backend", "zapi_instance_id", "zapi_token", "zapi_client_token", "whatsapp_admin",
+            "zap_credenciais", "zap_matricula", "zap_codigo", "zap_mentoria",
+            "zap_ingresso_turma", "zap_turma_aberta", "zap_contato", "zap_comunicado",
+        ]
         widgets = {
             "email_host_password": forms.PasswordInput(render_value=True),
+            "zapi_token": forms.PasswordInput(render_value=True),
+            "zapi_client_token": forms.PasswordInput(render_value=True),
         }
 
     def __init__(self, *args, **kwargs):
@@ -220,6 +228,11 @@ class ConfiguracaoNotificacaoForm(forms.ModelForm):
                 self.add_error("email_host_user", "Preenche o email remetente pra usar SMTP real.")
             if not cleaned.get("email_host_password"):
                 self.add_error("email_host_password", "Preenche a senha de app pra usar SMTP real.")
+        if cleaned.get("whatsapp_backend") == ConfiguracaoNotificacao.WhatsAppBackend.ZAPI:
+            if not cleaned.get("zapi_instance_id"):
+                self.add_error("zapi_instance_id", "Preenche o instance id da Z-API.")
+            if not cleaned.get("zapi_token"):
+                self.add_error("zapi_token", "Preenche o token da Z-API.")
         return cleaned
 
 

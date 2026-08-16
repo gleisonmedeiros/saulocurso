@@ -1,6 +1,8 @@
 import logging
+import re
 from abc import ABC, abstractmethod
 
+import requests
 from django.core.mail import get_connection, send_mail
 from django.urls import reverse
 from django.utils import timezone
@@ -9,6 +11,64 @@ from .emails import render as render_email
 from .models import ConfiguracaoNotificacao, ModeloEmail, NotificacaoLog
 
 logger = logging.getLogger(__name__)
+
+
+def normalizar_telefone(telefone):
+    """Deixa só dígitos e garante DDI 55. Retorna None se claramente inválido."""
+    d = re.sub(r"\D", "", telefone or "")
+    if not d:
+        return None
+    if d.startswith("55"):
+        return d if len(d) >= 12 else None
+    if len(d) in (10, 11):  # DDD + número
+        return "55" + d
+    return d if len(d) >= 12 else None
+
+
+class WhatsAppBackend(ABC):
+    @abstractmethod
+    def enviar(self, telefone, mensagem):
+        raise NotImplementedError
+
+
+class MockWhatsAppBackend(WhatsAppBackend):
+    def enviar(self, telefone, mensagem):
+        print(f"[MOCK WHATSAPP] Para {telefone}: {mensagem}")
+        NotificacaoLog.objects.create(canal="whatsapp", destinatario=telefone or "-", mensagem=mensagem)
+
+
+class ZAPIWhatsAppBackend(WhatsAppBackend):
+    """Envio real via Z-API. Base: /instances/{id}/token/{token}, header
+    Client-Token, corpo JSON {phone, message} no endpoint /send-text."""
+
+    def __init__(self, config):
+        self.config = config
+
+    def enviar(self, telefone, mensagem):
+        phone = normalizar_telefone(telefone)
+        if not phone:
+            logger.warning("WhatsApp ignorado — telefone inválido: %r", telefone)
+            return
+        url = (
+            f"https://api.z-api.io/instances/{self.config.zapi_instance_id}"
+            f"/token/{self.config.zapi_token}/send-text"
+        )
+        headers = {"Content-Type": "application/json"}
+        if self.config.zapi_client_token:
+            headers["Client-Token"] = self.config.zapi_client_token
+        try:
+            resp = requests.post(url, json={"phone": phone, "message": mensagem}, headers=headers, timeout=15)
+            resp.raise_for_status()
+        except Exception:
+            logger.exception("Falha ao enviar WhatsApp via Z-API pra %s", phone)
+            raise
+        NotificacaoLog.objects.create(canal="whatsapp", destinatario=phone, mensagem=mensagem)
+
+
+def get_whatsapp_backend(config) -> WhatsAppBackend:
+    if config.whatsapp_backend == ConfiguracaoNotificacao.WhatsAppBackend.ZAPI:
+        return ZAPIWhatsAppBackend(config)
+    return MockWhatsAppBackend()
 
 
 class NotificationBackend(ABC):
@@ -77,6 +137,7 @@ class NotificationService:
     def __init__(self):
         self.config = ConfiguracaoNotificacao.obter()
         self.backend = get_notification_backend()
+        self.whatsapp = get_whatsapp_backend(self.config)
 
     def _montar(self, chave, contexto):
         """Pega assunto+corpo do modelo (painel ou padrão) e aplica os
@@ -86,6 +147,20 @@ class NotificationService:
 
     def _portal_login(self):
         return f"{(self.config.site_url or '').rstrip('/')}{reverse('accounts:login')}"
+
+    @staticmethod
+    def _telefone(aluno):
+        return getattr(getattr(aluno, "perfil", None), "telefone", "") or ""
+
+    def _whatsapp(self, chave, telefone, texto):
+        """Manda o mesmo texto por WhatsApp se o toggle daquela notificação
+        estiver ligado. Falha de WhatsApp não derruba o resto (email já foi)."""
+        if not telefone or not self.config.zap_habilitado(chave):
+            return
+        try:
+            self.whatsapp.enviar(telefone, texto)
+        except Exception:
+            logger.exception("Falha ao enviar WhatsApp (%s)", chave)
 
     def notificar_matricula(self, aluno, curso):
         perfil = getattr(aluno, "perfil", None)
@@ -101,9 +176,10 @@ class NotificationService:
         })
 
         self.backend.enviar_email(aluno.email or aluno.get_username(), assunto, mensagem_aluno)
-        self.backend.enviar_whatsapp(telefone if telefone != "-" else aluno.get_username(), mensagem_aluno)
+        self._whatsapp("matricula", self._telefone(aluno), mensagem_aluno)
 
         self.backend.enviar_email(self.config.email_destino_admin(), assunto_admin, mensagem_admin)
+        self._whatsapp("matricula", self.config.whatsapp_admin, mensagem_admin)
 
     def notificar_credenciais(self, aluno, senha_temporaria):
         nome = aluno.get_full_name() or aluno.get_username()
@@ -112,11 +188,13 @@ class NotificationService:
             "senha": senha_temporaria, "portal": self._portal_login(),
         })
         self.backend.enviar_email(aluno.email, assunto, mensagem)
+        self._whatsapp("credenciais", self._telefone(aluno), mensagem)
 
     def notificar_codigo_recuperacao(self, aluno, codigo):
         nome = aluno.get_full_name() or aluno.get_username()
         assunto, mensagem = self._montar("codigo_recuperacao", {"nome": nome, "codigo": codigo})
         self.backend.enviar_email(aluno.email, assunto, mensagem)
+        self._whatsapp("codigo", self._telefone(aluno), mensagem)
 
     def notificar_mentoria(self, mentoria):
         """Avisa por email os alunos com matrícula ativa (e conta ativa) no
@@ -143,6 +221,7 @@ class NotificationService:
                 "link": getattr(mentoria, "link_reuniao", "") or "", "portal": portal_url,
             })
             self.backend.enviar_email(aluno.email, assunto, mensagem)
+            self._whatsapp("mentoria", self._telefone(aluno), mensagem)
             enviados += 1
         return enviados
 
@@ -159,6 +238,7 @@ class NotificationService:
             "info": turma.informacoes_acesso or "",
         })
         self.backend.enviar_email(aluno.email, assunto, mensagem)
+        self._whatsapp("ingresso_turma", self._telefone(aluno), mensagem)
 
     def notificar_turma_aberta(self, interessados, turma):
         """Avisa quem pediu aviso (InteresseTurma) que abriu turma nova com
@@ -179,6 +259,7 @@ class NotificationService:
                 "data": quando, "link": portal_url,
             })
             self.backend.enviar_email(aluno.email, assunto, mensagem)
+            self._whatsapp("turma_aberta", self._telefone(aluno), mensagem)
             enviados += 1
         return enviados
 
@@ -196,6 +277,7 @@ class NotificationService:
                 "Equipe RS Central dos Cursos"
             )
             self.backend.enviar_email(aluno.email, assunto, corpo)
+            self._whatsapp("comunicado", self._telefone(aluno), corpo)
             enviados += 1
         return enviados
 
@@ -207,3 +289,4 @@ class NotificationService:
             "mensagem": contato_mensagem.mensagem,
         })
         self.backend.enviar_email(self.config.email_destino_admin(), assunto, mensagem)
+        self._whatsapp("contato", self.config.whatsapp_admin, mensagem)

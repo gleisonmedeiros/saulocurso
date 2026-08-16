@@ -1,70 +1,109 @@
 {% extends "painel/base_painel.html" %}
-{% block title %}Configuração de notificações — Painel{% endblock %}
+{% block title %}Notificações — Painel{% endblock %}
 
 {% block painel_content %}
 <section class="max-w-2xl mx-auto px-4 py-10">
     <a href="{% url 'painel:dashboard' %}" class="text-sm text-brand-600 hover:underline">&larr; Painel</a>
-    <h1 class="text-2xl font-bold mt-2 mb-1">Configuração de notificações</h1>
-    <p class="text-gray-500 text-sm mb-6">
-        Escolhe entre modo teste (não envia nada, só registra) ou SMTP real (Gmail/Google Workspace) —
-        usado pra mandar senha de acesso e confirmação de matrícula pro aluno.
-    </p>
+    <h1 class="text-2xl font-bold text-brand-700 mt-2 mb-1">Notificações</h1>
+    <p class="text-gray-500 text-sm mb-6">Configure o envio de email e de WhatsApp. Em modo teste nada é enviado de verdade.</p>
 
-    <form method="post" class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+    <form method="post" class="space-y-6">
         {% csrf_token %}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.backend.label }}</label>
-            {{ form.backend }}
-            {% for error in form.backend.errors %}
-                <p class="text-red-600 text-xs mt-1">{{ error }}</p>
-            {% endfor %}
-        </div>
 
-        <div>
+        {# ---------- Geral ---------- #}
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.site_url.label }}</label>
             {{ form.site_url }}
             {% if form.site_url.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.site_url.help_text }}</p>{% endif %}
-            {% for error in form.site_url.errors %}
-                <p class="text-red-600 text-xs mt-1">{{ error }}</p>
-            {% endfor %}
+            {% for e in form.site_url.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
         </div>
 
-        <div id="campos-smtp" class="space-y-4">
+        {# ---------- Email ---------- #}
+        <div class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+            <h2 class="font-semibold text-gray-900">Email</h2>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host_user.label }}</label>
-                {{ form.email_host_user }}
-                {% if form.email_host_user.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.email_host_user.help_text }}</p>{% endif %}
-                {% for error in form.email_host_user.errors %}
-                    <p class="text-red-600 text-xs mt-1">{{ error }}</p>
-                {% endfor %}
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.backend.label }}</label>
+                {{ form.backend }}
+                {% for e in form.backend.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
             </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host_password.label }}</label>
-                {{ form.email_host_password }}
-                {% if form.email_host_password.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.email_host_password.help_text }}</p>{% endif %}
-                {% for error in form.email_host_password.errors %}
-                    <p class="text-red-600 text-xs mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <details class="text-sm">
-                <summary class="cursor-pointer text-gray-500 select-none">Configuração avançada (servidor/porta)</summary>
-                <div class="mt-3 space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host.label }}</label>
-                        {{ form.email_host }}
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_port.label }}</label>
-                        {{ form.email_port }}
-                    </div>
-                    <div class="flex items-center gap-2">
-                        {{ form.email_use_tls }}
-                        <label class="text-sm font-medium text-gray-700">{{ form.email_use_tls.label }}</label>
-                    </div>
+            <div id="campos-smtp" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host_user.label }}</label>
+                    {{ form.email_host_user }}
+                    {% if form.email_host_user.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.email_host_user.help_text }}</p>{% endif %}
+                    {% for e in form.email_host_user.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
                 </div>
-            </details>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host_password.label }}</label>
+                    {{ form.email_host_password }}
+                    {% if form.email_host_password.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.email_host_password.help_text }}</p>{% endif %}
+                    {% for e in form.email_host_password.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <details class="text-sm">
+                    <summary class="cursor-pointer text-gray-500 select-none">Configuração avançada (servidor/porta)</summary>
+                    <div class="mt-3 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_host.label }}</label>
+                            {{ form.email_host }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email_port.label }}</label>
+                            {{ form.email_port }}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            {{ form.email_use_tls }}
+                            <label class="text-sm font-medium text-gray-700">{{ form.email_use_tls.label }}</label>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        {# ---------- WhatsApp (Z-API) ---------- #}
+        <div class="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+            <h2 class="font-semibold text-gray-900">WhatsApp (Z-API)</h2>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.whatsapp_backend.label }}</label>
+                {{ form.whatsapp_backend }}
+                {% for e in form.whatsapp_backend.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div id="campos-zapi" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.zapi_instance_id.label }}</label>
+                    {{ form.zapi_instance_id }}
+                    {% for e in form.zapi_instance_id.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.zapi_token.label }}</label>
+                    {{ form.zapi_token }}
+                    {% for e in form.zapi_token.errors %}<p class="text-red-600 text-xs mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.zapi_client_token.label }}</label>
+                    {{ form.zapi_client_token }}
+                    {% if form.zapi_client_token.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.zapi_client_token.help_text }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.whatsapp_admin.label }}</label>
+                    {{ form.whatsapp_admin }}
+                    {% if form.whatsapp_admin.help_text %}<p class="text-xs text-gray-400 mt-1">{{ form.whatsapp_admin.help_text }}</p>{% endif %}
+                </div>
+
+                <div class="border-t border-gray-100 pt-4">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Quais avisos também vão por WhatsApp:</p>
+                    <div class="space-y-2">
+                        {% for campo in form %}
+                            {% if campo.name|slice:":4" == "zap_" %}
+                                <label class="flex items-center gap-2 text-sm">
+                                    {{ campo }} <span class="text-gray-700">{{ campo.label }}</span>
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">Dica: evite ligar o comunicado em massa — disparo em lote pelo WhatsApp pode bloquear o número.</p>
+                </div>
+            </div>
         </div>
 
         <button type="submit" class="w-full bg-brand-600 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-700">Salvar</button>
@@ -74,16 +113,15 @@
 
 {% block extra_js %}
 <script>
-    const backendSelect = document.getElementById('id_backend');
-    const camposSmtp = document.getElementById('campos-smtp');
-
-    function atualizarVisibilidade() {
-        camposSmtp.style.display = backendSelect.value === 'smtp' ? 'block' : 'none';
+    function toggle(idSelect, idCampos, valorReal) {
+        const sel = document.getElementById(idSelect);
+        const box = document.getElementById(idCampos);
+        if (!sel || !box) return;
+        const atualizar = () => { box.style.display = sel.value === valorReal ? 'block' : 'none'; };
+        atualizar();
+        sel.addEventListener('change', atualizar);
     }
-
-    if (backendSelect && camposSmtp) {
-        atualizarVisibilidade();
-        backendSelect.addEventListener('change', atualizarVisibilidade);
-    }
+    toggle('id_backend', 'campos-smtp', 'smtp');
+    toggle('id_whatsapp_backend', 'campos-zapi', 'zapi');
 </script>
 {% endblock %}
