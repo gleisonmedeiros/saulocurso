@@ -155,7 +155,7 @@ class ConfiguracaoSiteForm(forms.ModelForm):
     class Meta:
         model = ConfiguracaoSite
         fields = [
-            "hero_titulo", "hero_subtitulo", "hero_video_youtube_id", "hero_video_drive_file_id",
+            "hero_badge_texto", "hero_titulo", "hero_subtitulo", "hero_video_youtube_id", "hero_video_drive_file_id",
             "sobre_texto",
             "contato_email", "contato_telefone", "whatsapp_numero",
             "cnpj", "endereco", "instagram_url",

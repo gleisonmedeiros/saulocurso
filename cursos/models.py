@@ -315,6 +315,13 @@ class Cupom(models.Model):
 class ConfiguracaoSite(models.Model):
     """Textos e contatos editáveis da tela inicial. Existe no máximo 1 linha (singleton)."""
 
+    hero_badge_texto = models.CharField(
+        "Selo acima do título (hero)",
+        max_length=50,
+        blank=True,
+        default="Turmas abertas",
+        help_text="Deixe em branco para ocultar o selo.",
+    )
     hero_titulo = models.CharField(max_length=200, default="Transforme sua carreira com nossos cursos")
     hero_subtitulo = models.TextField(
         default="Aulas em vídeo, apostilas em PDF e mentoria ao vivo. Acesso liberado na hora, "
